@@ -1,7 +1,7 @@
 # GlucoView
 A wall mounted E-paper display made for type one diabetics, used for checking blood sugar levels at a glance with ease.
 
-![Gluco View](https://raw.githubusercontent.com/sKribble45/GlucoView/refs/heads/main/Images/MainScreen.jpg)
+<img src="Images/MainScreen.jpg" alt="drawing" width="75%"/>
 
 
 ## Features:
@@ -14,8 +14,7 @@ A wall mounted E-paper display made for type one diabetics, used for checking bl
 ## Configuration:
 It uses a web ui to configure the wifi and dexcom credentials aswell as other settings. It is accesed by pressing the pairing button on the side of the device and scanning 2 Qr codes (One for the access point and one for the web page).
 
-![Web UI](https://raw.githubusercontent.com/sKribble45/GlucoView/refs/heads/main/Images/WebUi.jpg)
-
+<img src="Images/WebUi.png" alt="drawing" width="50%"/>
 
 # Build Your Own
 
