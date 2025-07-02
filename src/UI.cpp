@@ -7,6 +7,7 @@
 #include "UI.h"
 #include <ctime>
 #include "glucose_level.h"
+#include "config/config_manager.h"
 
 UBYTE *MainImage;
 RTC_DATA_ATTR UiScreen uiLastScreen = NONE;
@@ -60,17 +61,26 @@ static GlucoseLevelString GetGLChar(double bg, double delta, long epoch){
     // Make time string
     int minutes = utc->tm_min;
     int hours = utc->tm_hour;
+    // ajust hours if 12h time
+    bool AM = false;
+    if (savedConfig.twelveHourTime && hours > 12){hours -= 12;}
+
     std::string minutesString;
     std::string hoursString;
 
     // Statring from a blank string add the 0 at the start if the number of minutes or hours is bellow 10 otherwise the time could look like this: 1:4 instead of this: 01:04
     if (minutes < 10){minutesString += "0";}
     minutesString += std::to_string(minutes);
-    if (hours < 10){hoursString += "0";}
+    if (hours < 10 && !savedConfig.twelveHourTime){hoursString += "0";}
     hoursString += std::to_string(hours);
 
     // Create a string with the hour and minute of the timestamp.
     std::string timestr = hoursString + ":" + minutesString;
+    // add the suffix AM or PM to the 12h time.
+    if (savedConfig.twelveHourTime){
+        if(AM){timestr += " AM";}
+        else{timestr += " PM";}
+    }
 
     // Convert bg into char
     char bgChar[5];

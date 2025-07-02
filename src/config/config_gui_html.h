@@ -1,3 +1,4 @@
 #include <WiFi.h>
 
-void PrintHtml(WiFiClient &client);
+void PrintMainHtml(WiFiClient &client);
+void PrintFinishedHtml(WiFiClient &client);

@@ -99,13 +99,6 @@ bool ConnectToNetwork(String ssid, String password){
     Serial.println(ssid);
     while (WiFi.status() != WL_CONNECTED && waitProgress <= (waiTimeLimitS * 2)){
         Serial.println(WiFi.status());
-
-        // if (WiFi.status() == WL_NO_SSID_AVAIL){
-        //     WiFi.disconnect();
-        //     delay(500);
-        //     Serial.println("attempting again");
-        //     WiFi.begin(ssid,password);
-        // }
         delay(500);
         waitProgress ++;
     }
@@ -120,9 +113,6 @@ bool ConnectToNetwork(String ssid, String password){
         Serial.println("Failed to conect to network. :(");
         return false;
     }
-
-
-    
 }
 
 

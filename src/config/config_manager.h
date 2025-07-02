@@ -10,10 +10,11 @@ typedef struct {
     String wifiPassword;
     String dexcomUsername;
     String dexcomPassword;
+    bool twelveHourTime;
 } UserConfig;
 
-extern RTC_DATA_ATTR WifiNetwork savedWifiNetwork;
-extern RTC_DATA_ATTR DexcomAccount savedDexcomAccount;
+
+extern RTC_DATA_ATTR UserConfig savedConfig;
 
 void LoadConfig();
 bool ConfigExists();

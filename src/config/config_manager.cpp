@@ -11,30 +11,30 @@
 #include <unordered_map>
 using namespace std;
 
-WifiNetwork savedWifiNetwork = {"", ""};
-DexcomAccount savedDexcomAccount = {"", ""};
+UserConfig savedConfig;
 
-const char *PREFERENCES_KEY = "levels-display";
+const char *PREFERENCES_KEY = "glucoview";
 
 void LoadConfig(){
     Preferences prefs;
     prefs.begin(PREFERENCES_KEY, false);
-    savedWifiNetwork.ssid = prefs.getString("wifi-ssid", "none");
-    savedWifiNetwork.password = prefs.getString("wifi-password", "none");
-    savedDexcomAccount.username = prefs.getString("dex-username", "none");
-    savedDexcomAccount.password = prefs.getString("dex-password", "none");
+    savedConfig = {
+        prefs.getString("wifi-ssid", "none"),
+        prefs.getString("wifi-password", "none"),
+        prefs.getString("dex-username", "none"),
+        prefs.getString("dex-password", "none"),
+        prefs.getInt("twelve-hour-time", 10)
+    };
     prefs.end();
-    Serial.println(savedWifiNetwork.ssid);
-    Serial.println(savedWifiNetwork.password);
-    Serial.println(savedDexcomAccount.username);
-    Serial.println(savedDexcomAccount.password);
+    Serial.print("12h Time: ");
+    Serial.println(savedConfig.twelveHourTime);
 }
 
 bool ConfigExists(){
-    if (savedWifiNetwork.ssid == "none" || 
-        savedWifiNetwork.password == "none" ||
-        savedDexcomAccount.username == "none" || 
-        savedDexcomAccount.password == "none"){
+    if (savedConfig.wifiSsid == "none" ||
+        savedConfig.wifiPassword == "none" ||
+        savedConfig.dexcomUsername == "none" ||
+        savedConfig.dexcomPassword == "none"){
         return false;
     }
     return true;
@@ -48,23 +48,9 @@ void SaveConfig(UserConfig config){
     prefs.putString("wifi-password", config.wifiPassword);
     prefs.putString("dex-username", config.dexcomUsername);
     prefs.putString("dex-password", config.dexcomPassword);
-    savedDexcomAccount = {config.dexcomUsername, config.dexcomPassword};
-    savedWifiNetwork = {config.wifiSsid, config.wifiPassword};
-    
+    prefs.putInt("twelve-hour-time", config.twelveHourTime); // for some reason bool dosnt work :( so i have to use int.
     prefs.end();
 }
-// vector<string> split(const string &s, char delim){
-//     vector<string> result;
-//     stringstream ss(s);
-//     string item;
-
-//     while (getline(ss, item, delim)) {
-//         result.push_back(item);
-//     }
-
-//     return result;
-// }
-
 unordered_map<string,string> parseQueryString(const string& query) {
     unordered_map<string, string> params;
     
@@ -153,96 +139,29 @@ void HostConfigAP(UserConfig &config,String APssid, String APpassword){
                                     Serial.print(p.second.c_str());
                                     Serial.println("]");
                                 }
-                                
+
+                                bool twelveHourTime;
+                                if (queryParsed["twelve_hour_time"] == "on"){twelveHourTime = true;}
+                                else{twelveHourTime = false;}
+
+
                                 config = { 
                                     queryParsed["wifi_ssid"].c_str(),
                                     queryParsed["wifi_password"].c_str(),
                                     queryParsed["dexcom_username"].c_str(),
-                                    queryParsed["dexcom_password"].c_str()
+                                    queryParsed["dexcom_password"].c_str(),
+                                    twelveHourTime
                                 };
+
                                 finishedConfig = true;
+
+                                PrintFinishedHtml(client);
+                            }
+                            else{
+                                PrintMainHtml(client);
                             }
 
-                            //// int savePostIndex = httpRequest.indexOf("POST /save/");
-                            //// if (savePostIndex >= 0) {
-                            ////     String ssid;
-                            ////     String password;
-                            ////     String filteredHttpRequest = httpRequest.substring(0, savePostIndex + 11);
-                            ////     Serial.print("filtered http request: ");
-                            ////     Serial.println(filteredHttpRequest);
-
-                            ////     vector<string> splitRequest = split(filteredHttpRequest.c_str(), '/');
-                            ////     if (splitRequest[0] != "" && splitRequest[1] != "") {
-                            ////         config.wifi = true;
-                            ////         config.wifiSsid = splitRequest[0].c_str();
-                            ////         config.wifiPassword = splitRequest[1].c_str();
-                            ////     }else{
-                            ////         config.wifi = false;
-                            ////     }
-
-                            ////     if (splitRequest[2] != "" && splitRequest[3] != "") {
-                            ////         config.dexcom = true;
-                            ////         config.dexcomUsername = splitRequest[0].c_str();
-                            ////         config.dexcomPassword = splitRequest[1].c_str();
-                            ////     }else{
-                            ////         config.dexcom = false;
-                            ////     }
-                            ////     finishedConfig = true;
-                            //// }
-                            //
-                            //// int wifiRequestIndex = httpRequest.indexOf("POST /set_wifi/");
-                            //// if (wifiRequestIndex >= 0) {
-                            ////     String ssid;
-                            ////     String password;
-                            ////     bool write_ssid = true;
-
-                            ////     for (int i = 15; httpRequest[i] != ' '; i++){
-                            ////         if (httpRequest[i] + wifiRequestIndex == '/'){
-                            ////             write_ssid = false;
-                            ////         }
-                            ////         else{
-                            ////             if (write_ssid){
-                            ////                 ssid += httpRequest[i];
-                            ////             }
-                            ////             else{
-                            ////                 password += httpRequest[i];
-                            ////             }
-                            ////         }
-                            ////     }
-                            ////     config.wifi = true;
-                            ////     config.wifiSsid = ssid;
-                            ////     config.wifiPassword = password;
-                            //// }
-
-                            //// int dexcomRequestPost = httpRequest.indexOf("POST /set_dexcom/");
-                            //// if (dexcomRequestPost >= 0) {
-                            ////     String username;
-                            ////     String password;
-                            ////     bool write_username = true;
-
-                            ////     for (int i = 17; httpRequest[i] != ' '; i++){
-                            ////         if (httpRequest[i] + dexcomRequestPost == '/'){
-                            ////             write_username = false;
-                            ////         }
-                            ////         else{
-                            ////             if (write_username){
-                            ////                 username += httpRequest[i];
-                            ////             }
-                            ////             else{
-                            ////                 password += httpRequest[i];
-                            ////             }
-                            ////         }
-                            ////     }
-                            ////     config.dexcom = true;
-                            ////     config.dexcomUsername = username;
-                            ////     config.dexcomPassword = password;
-                            //// }
-
-                            //// if (httpRequest.indexOf("POST /done") >= 0) {
-                            ////     finishedConfig = true;
-                            //// }
-
-                            PrintHtml(client);
+                            
                             // The HTTP response ends with another blank line
                             client.println();
                             // Break out of the while loop

@@ -23,8 +23,6 @@ using namespace std;
 const bool TEST_CONFIG = false;
 esp_sleep_wakeup_cause_t wakeup_reason;
 RTC_DATA_ATTR GlucoseLevel prevGl = {0.0, 0.0, 0};
-// RTC_DATA_ATTR double prevBg = 0.0;
-// RTC_DATA_ATTR int prevBgTimestamp = 0;
 RTC_DATA_ATTR bool noDataPrev = false;
 RTC_DATA_ATTR bool wifiTimoutPrev = false;
 RTC_DATA_ATTR int wakeupTime = 0;
@@ -58,18 +56,28 @@ void Sleep(int sleep_seconds){
     Serial.print(sleep_seconds);
     Serial.println(" seconds * yawn*");
     EPD_2in13_V4_Sleep(); // tell the screen to go to sleep "good night" *yawn*
-    esp_sleep_enable_timer_wakeup(sleep_seconds * 1000000); // tel the esp how long to sleep *yawn*
+    esp_sleep_enable_timer_wakeup(sleep_seconds * 1000000); // tel the esp how long to sleep *big yawn*
     esp_sleep_enable_ext0_wakeup((gpio_num_t)BUTTON_PIN, 1);
     rtc_gpio_pullup_dis((gpio_num_t)BUTTON_PIN);
     rtc_gpio_pulldown_en((gpio_num_t)BUTTON_PIN);
     //esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF); // very sleep deep *strech*
     esp_deep_sleep_start(); // COMENSE THE SLEEP!
 }
+string randomString(size_t length) {
+    const string characterSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/*+-=";
+    string result;
+    srand(time(0));
+
+    for (size_t i = 0; i < length; ++i) {
+        result += characterSet[rand() % characterSet.size()];
+    }
+    return result;
+}
 
 void Config(){
-    UserConfig config;
-    HostConfigAP(config, "levels-display", "123456789");
-    SaveConfig(config);
+    string ApPassword = "glucoview_"+randomString(5);
+    HostConfigAP(savedConfig, "GlucoView", ApPassword.c_str());
+    SaveConfig(savedConfig);
 }
 
 void NoData(){
@@ -125,7 +133,7 @@ unsigned long GetEpoch(){
 
 
 GlucoseLevel GetBG(){
-    Follower follower(true, savedDexcomAccount.username, savedDexcomAccount.password);
+    Follower follower(true, savedConfig.dexcomUsername, savedConfig.dexcomPassword);
     // follower.getNewSessionID();
     if (!follower.getNewSessionID()){
         if (dexErrors == 0){
@@ -215,65 +223,15 @@ void UpdateDisplay(){
 }
 
 void OnStart() {
-    
-
-    // for scanning for multiple saved netoworks.
-    //// WifiNetwork wifi_to_connect = scan_for_saved_networks(saved_wifi_networks);
-
-    //// WifiNetwork null_network = {"", ""};
-    //// if (wifi_to_connect.ssid != null_network.ssid && wifi_to_connect.password != null_network.password){
-    ////     connectedToNetworkSuccessfuly = connect_to_network(wifi_to_connect.ssid, wifi_to_connect.password);
-    //// }
-    
-    // bool savedNetworkExists = SavedNetworkExists(savedWifiNetwork);
-    // if (!savedNetworkExists && !noWifiPrev){
-    //     // try again :D
-    //     savedNetworkExists = SavedNetworkExists(savedWifiNetwork);
-    // }
-    // if (savedNetworkExists){
-    //     Serial.println("A saved wifi network exists :)");
-
-    //     if (ConnectToNetwork(savedWifiNetwork.ssid, savedWifiNetwork.password)){
-    //         noWifiPrev = false;
-    //         wifiTimoutPrev = false;
-    //         UpdateDisplay();
-    //     }
-    //     else{
-    //         if (wifiTimoutPrev){
-    //             UiFullClear();
-    //             UiWarning("No Data", "Timed out when connecting to wifi network.");
-    //             UiShow();
-    //             doPartialUpdate = false;
-    //             Sleep(TIMOUT_WIFI_SLEEP);
-    //         }
-    //         Serial.println("Failed to connect to wifi network (timed out) :(");
-    //         wifiTimoutPrev = true;
-    //         Sleep(RETRY_TIMOUT_WIFI_SLEEP);
-    //     }
-    // }
-    // else{
-    //     if (noWifiPrev){
-    //         UiFullClear();
-    //         UiWarning("No Data", "No network found with matching ssid");
-    //         UiShow();
-    //         Sleep(NO_WIFI_SLEEP);
-    //     }
-    //     else{
-    //         Serial.println("No saved wifi network exists :(");
-            
-    //         doPartialUpdate = false;
-    //         Sleep(RETRY_NO_WIFI_SLEEP);
-    //     }
-
-    //     noWifiPrev = true;
-    // }
-    if (ConnectToNetwork(savedWifiNetwork.ssid, savedWifiNetwork.password)){
+    if (ConnectToNetwork(savedConfig.wifiSsid, savedConfig.wifiPassword)){
         noWifiPrev = false;
         wifiTimoutPrev = false;
         UpdateDisplay();
     }
     else{
-        bool savedNetworkExists = SavedNetworkExists(savedWifiNetwork);
+        //TODO: In the userconfig struct make the wifi credentials into a WifiNetwork struct
+        WifiNetwork savedNetwork = {savedConfig.wifiSsid, savedConfig.wifiPassword};
+        bool savedNetworkExists = SavedNetworkExists(savedNetwork);
         // if (!savedNetworkExists && !noWifiPrev){
         //     // try again :D
         //     savedNetworkExists = SavedNetworkExists(savedWifiNetwork);
@@ -327,6 +285,7 @@ void setup(){
     if (!configExists || TEST_CONFIG || wakeup_reason == ESP_SLEEP_WAKEUP_EXT0){
         Serial.println("config");
         Config();
+        ESP.restart();
     }
     
     OnStart();
