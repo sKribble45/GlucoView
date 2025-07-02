@@ -44,36 +44,11 @@
 /**
  * GPIO config
 **/
-//* idk
-// #define EPD_SCK_PIN  36
-// #define EPD_MOSI_PIN 35
-// #define EPD_CS_PIN   13
-// #define EPD_RST_PIN  12
-// #define EPD_DC_PIN   11
-// #define EPD_BUSY_PIN 10
-
-
-//* itsy bitsy
-// #define EPD_SCK_PIN  19
-// #define EPD_MOSI_PIN 21
-// #define EPD_CS_PIN   13
-// #define EPD_RST_PIN  12
-// #define EPD_DC_PIN   14
-// #define EPD_BUSY_PIN 7
-
-//* feather
-// #define EPD_SCK_PIN  36
-// #define EPD_MOSI_PIN 35
-// #define EPD_CS_PIN   13
-// #define EPD_RST_PIN  12
-// #define EPD_DC_PIN   11
-// #define EPD_BUSY_PIN 5
-
 //* seeed studio xiao esp32 s3
 #define EPD_SCK_PIN  D8
 #define EPD_MOSI_PIN D10
 #define EPD_CS_PIN   D0
-#define EPD_RST_PIN  D1
+#define EPD_RST_PIN  D3
 #define EPD_DC_PIN   D2
 #define EPD_BUSY_PIN D4
 

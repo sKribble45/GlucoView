@@ -47,7 +47,7 @@ UBYTE *Epaper_Image;
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
 
-#define BUTTON_PIN D3
+#define BUTTON_PIN D1
 
 void Sleep(int sleep_seconds){
     WiFi.disconnect(true);
