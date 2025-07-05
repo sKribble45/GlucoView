@@ -23,6 +23,7 @@ void UiWarning(const char *message, const char *subtext);
 void UiWarningGlucose(const char *message, double bg,const char *subtext);
 void UiTextQrCode(int startX, int startY, const char *link);
 void UiWifiQrCode(int startX, int startY, String ssid, String password);
+void UiUpdateMode();
 
 typedef enum {
     NONE = 0,

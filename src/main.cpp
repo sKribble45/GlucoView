@@ -258,16 +258,23 @@ void OnStart(UserConfig config) {
     }
 }
 
-
+void UpdateMode(){
+    Serial.print("Started Update mode, Waiting for update");
+    UiUpdateMode();
+    UiShow();
+    while (true);
+}
 
 void setup(){
     Serial.begin(115200);
-    delay(2000);
+    wakeup_reason = esp_sleep_get_wakeup_cause();
+    int buttonValue = digitalRead(BUTTON_PIN);
     Serial.println("Initialise display");
     DispInit();
     Serial.println("Display initilised.");
-
-    wakeup_reason = esp_sleep_get_wakeup_cause();
+    // If it hasnt woken up from sleep because of the button press (so not pairing) and the button is down (when it is plugged )
+    if (wakeup_reason != ESP_SLEEP_WAKEUP_EXT0 && buttonValue) {UpdateMode();}
+    
     UserConfig config;
     LoadConfig(config);
     if (!ConfigExists(config) || TEST_CONFIG || wakeup_reason == ESP_SLEEP_WAKEUP_EXT0){
