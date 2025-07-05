@@ -173,10 +173,10 @@ bool Follower::GlucoseLevelsNow()
             }
 
             // Extract the blood glucose value
-            GlucoseNow.mg_dl = doc[0]["Value"];
-            GlucoseNow.mmol_l = convertToMmol(GlucoseNow.mg_dl);
+            // GlucoseNow.mg_dl = doc[0]["Value"];
+            GlucoseNow.bg = convertToMmol(doc[0]["Value"]);
             Serial.print("Blood Glucose Level: ");
-            Serial.println(GlucoseNow.mmol_l);
+            Serial.println(GlucoseNow.bg);
 
             GlucoseNow.trend_description = doc[0]["Trend"].as<const char *>();
             GlucoseNow.trend_Symbol = getTrendSymbol(GlucoseNow.trend_description);

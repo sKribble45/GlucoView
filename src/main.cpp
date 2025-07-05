@@ -14,7 +14,6 @@
 #include <unordered_map>
 #include <Preferences.h>
 #include "dexcom/dexcom_account.h"
-#include "glucose_level.h"
 #include "driver/rtc_io.h"
 #include "time.h"
 using namespace std;
@@ -22,7 +21,7 @@ using namespace std;
 
 const bool TEST_CONFIG = false;
 esp_sleep_wakeup_cause_t wakeup_reason;
-RTC_DATA_ATTR GlucoseLevel prevGl = {0.0, 0.0, 0};
+RTC_DATA_ATTR GlucoseReading prevGl;
 RTC_DATA_ATTR bool noDataPrev = false;
 RTC_DATA_ATTR bool wifiTimoutPrev = false;
 RTC_DATA_ATTR int wakeupTime = 0;
@@ -54,7 +53,7 @@ void Sleep(int sleep_seconds){
     WiFi.mode(WIFI_OFF);
     Serial.print("Going to sleep for ");
     Serial.print(sleep_seconds);
-    Serial.println(" seconds * yawn*");
+    Serial.println("s *yawn*");
     EPD_2in13_V4_Sleep(); // tell the screen to go to sleep "good night" *yawn*
     esp_sleep_enable_timer_wakeup(sleep_seconds * 1000000); // tel the esp how long to sleep *big yawn*
     esp_sleep_enable_ext0_wakeup((gpio_num_t)BUTTON_PIN, 1);
@@ -91,9 +90,7 @@ void NoData(){
     }
     else{
         noDataPrev = true;
-        Serial.print("No new reading yet, sleeping for ");
-        Serial.print(SHORT_NO_DATA_SLEEP);
-        Serial.println("S");
+        Serial.print("No new reading yet.");
         Sleep(SHORT_NO_DATA_SLEEP);
     }
     
@@ -132,8 +129,18 @@ unsigned long GetEpoch(){
     return currentTime;
 }
 
+void PrintGlucose(GlucoseReading gl){
+    Serial.print("BG: ");
+    Serial.println(gl.bg);
+    Serial.print("Delta: ");
+    Serial.println(gl.delta);
+    Serial.print("Glucose Timestamp: ");
+    Serial.print(gl.timestamp);
+    Serial.print(", Tz adjusted: ");
+    Serial.print(gl.tztimestamp);
+}
 
-GlucoseLevel GetBG(UserConfig config){
+GlucoseReading GetBG(UserConfig config){
     Follower follower(true, config.dexcomUsername, config.dexcomPassword);
     // follower.getNewSessionID();
     if (!follower.getNewSessionID()){
@@ -153,25 +160,11 @@ GlucoseLevel GetBG(UserConfig config){
     else{dexErrors = 0;}
     follower.GlucoseLevelsNow();
 
-    GlucoseLevel gl = {
-        follower.GlucoseNow.mmol_l,
-        0.0,
-        follower.GlucoseNow.timestamp,
-        follower.GlucoseNow.tztimestamp
-    };
-    Serial.print("Glucose: ");
-    Serial.println(gl.bg);
-    Serial.print("Glucose Timestamp: ");
-    Serial.println(gl.timestamp);
+    GlucoseReading gl = follower.GlucoseNow;
+    PrintGlucose(gl);
 
-    // if (bgTimestamp > (currentTime + (5 * 60))){
-    //     no_data_sleep();
-    // }+
-
-    if (gl.timestamp == prevGl.timestamp){
-        // the reading hasnt changed yet so wait 10s to see if it has. If not display no data and wait 5 mins - the 10 we already waited for a new reading
-        NoData();
-    }
+    // if the reading hasnt changed yet call the no data function.
+    if (gl.timestamp == prevGl.timestamp){NoData();}
     else{noDataPrev = false;}
     // work out delta or if it is the first reading set delta to 0.0
     if (prevGl.bg != 0.0){ gl.delta = gl.bg - prevGl.bg; }
@@ -182,7 +175,8 @@ GlucoseLevel GetBG(UserConfig config){
 }
 
 void UpdateDisplay(UserConfig config){
-    GlucoseLevel gl = GetBG(config);
+    // Get the blood glucose level from dexcom.
+    GlucoseReading gl = GetBG(config);
 
     unsigned long currentTime = GetEpoch();
 
@@ -193,16 +187,16 @@ void UpdateDisplay(UserConfig config){
     // display the glucose and delta on the display.
     
     if (uiLastScreen != GLUCOSE || partialUpdates >= 10){
-        UiGlucose(gl.bg, gl.delta, gl.tztimestamp);
+        UiGlucose(gl);
         UiShow();
         partialUpdates = 0;
     }
     else{
-        UiGlucose(prevGl.bg, prevGl.delta, prevGl.tztimestamp);
+        UiGlucose(prevGl);
         UiWriteToMem();
 
-        UiClearGlucose(prevGl.bg, prevGl.delta, prevGl.tztimestamp);
-        UiGlucose(gl.bg, gl.delta, gl.tztimestamp);
+        UiClearGlucose(prevGl);
+        UiGlucose(gl);
         UiShowPartial();
         partialUpdates ++;
     }
@@ -216,7 +210,6 @@ void UpdateDisplay(UserConfig config){
     int sleepTime = (5 * 60) - (currentTime - gl.timestamp);
 
     // sleep for the next reading.
-    Serial.println(sleepTime);
     wakeupTime = currentTime + sleepTime;
     if (sleepTime < 0 && sleepTime > - 120){Sleep(10);}
     else if(sleepTime < 0){NoData();}
@@ -258,17 +251,11 @@ void OnStart(UserConfig config) {
             }
             else{
                 Serial.println("No saved wifi network exists :(");
-                
                 Sleep(RETRY_NO_WIFI_SLEEP);
             }
-
             noWifiPrev = true;
         }
-        
     }
-    
-    
-    
 }
 
 
@@ -284,7 +271,7 @@ void setup(){
     UserConfig config;
     LoadConfig(config);
     if (!ConfigExists(config) || TEST_CONFIG || wakeup_reason == ESP_SLEEP_WAKEUP_EXT0){
-        Serial.println("config");
+        Serial.println("Entering Configuration");
         Config();
         ESP.restart();
     }

@@ -19,11 +19,10 @@ extern String applicationId;
 // GlucoseReading structure
 struct GlucoseReading
 {
-    // ToDo need timestamp here as well
     unsigned long timestamp;
     unsigned long tztimestamp;
-    int mg_dl;
-    double mmol_l;
+    double bg;
+    double delta;
     const char *trend_description;
     const char *trend_Symbol;
     // Define other members as needed for your application

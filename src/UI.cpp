@@ -6,8 +6,9 @@
 #include <qrcode.h>
 #include "UI.h"
 #include <ctime>
-#include "glucose_level.h"
 #include "config/config_manager.h"
+#include "dexcom/Dexcom_follow.h"
+using namespace std;
 
 UBYTE *MainImage;
 RTC_DATA_ATTR UiScreen uiLastScreen = NONE;
@@ -51,13 +52,18 @@ void UiClearCenteredText(int Xstart, int Ystart, const char * pString, sFONT* Fo
     int Ypoint = Ystart - (Font->Height / 2);
     Paint_ClearWindows(Xpoint, Ypoint, Xpoint + (Font->Width * string_length), Ypoint + Font->Height, WHITE);
 }
+struct GlucoseReadingString{
+    String bg;
+    String delta;
+    String time;
+};
 
 // Makes the gl into a string version ready for drawing to the screen.
-static GlucoseLevelString GetGLChar(double bg, double delta, long epoch){
+static GlucoseReadingString GetGLChar(GlucoseReading gl){
     UserConfig config;
     LoadConfig(config);
     // Get UTC time from the epoch
-    time_t epochTime = epoch;
+    time_t epochTime = gl.tztimestamp;
     struct tm *utc = gmtime(&epochTime);
     
     // Make time string
@@ -70,17 +76,17 @@ static GlucoseLevelString GetGLChar(double bg, double delta, long epoch){
         else if (hours > 12){hours -= 12;}
         else {AM = true;}
     }
-    std::string minutesString;
-    std::string hoursString;
+    string minutesString;
+    string hoursString;
 
     // Statring from a blank string add the 0 at the start if the number of minutes or hours is bellow 10 otherwise the time could look like this: 1:4 instead of this: 01:04
     if (minutes < 10){minutesString += "0";}
-    minutesString += std::to_string(minutes);
+    minutesString += to_string(minutes);
     if (hours < 10 && !config.twelveHourTime){hoursString += "0";}
-    hoursString += std::to_string(hours);
+    hoursString += to_string(hours);
 
     // Create a string with the hour and minute of the timestamp.
-    std::string timestr = hoursString + ":" + minutesString;
+    string timestr = hoursString + ":" + minutesString;
     // add the suffix AM or PM to the 12h time.
     if (config.twelveHourTime){
         if(AM){timestr += " AM";}
@@ -89,20 +95,20 @@ static GlucoseLevelString GetGLChar(double bg, double delta, long epoch){
 
     // Convert bg into char
     char bgChar[5];
-    sprintf(bgChar, "%.1f", bg);
+    sprintf(bgChar, "%.1f", gl.bg);
 
     // Add a plus to the delta if it is positive.
     char deltaFancy[5];
-    if (delta >= 0.0){ sprintf(deltaFancy, "+%.1f", delta); }
-    else{ sprintf(deltaFancy, "%.1f", delta); }
-    GlucoseLevelString glchr = {bgChar, deltaFancy, timestr.c_str()};
+    if (gl.delta >= 0.0){ sprintf(deltaFancy, "+%.1f", gl.delta); }
+    else{ sprintf(deltaFancy, "%.1f", gl.delta); }
+    GlucoseReadingString glchr = {bgChar, deltaFancy, timestr.c_str()};
 
     return glchr;
 }
 
 // Draw Glucose screen (includes glucose level, delta and timestamp)
-void UiGlucose(double glucose, double delta, long epoch){
-    GlucoseLevelString glstr = GetGLChar(glucose, delta, epoch); 
+void UiGlucose(GlucoseReading gl){
+    GlucoseReadingString glstr = GetGLChar(gl); 
 
     // Draw bg
     Paint_DrawString_EN(true, (EPD_2in13_V4_HEIGHT / 2) - 25, EPD_2in13_V4_WIDTH / 2, glstr.bg.c_str(), &Font64, BLACK, WHITE);
@@ -114,8 +120,8 @@ void UiGlucose(double glucose, double delta, long epoch){
     uiLastScreen = GLUCOSE;
 }
 // Clear Glucose screen (includes glucose level, delta and timestamp) ready for partial update.
-void UiClearGlucose(double glucose, double delta, long epoch){
-    GlucoseLevelString glstr = GetGLChar(glucose, delta, epoch); 
+void UiClearGlucose(GlucoseReading gl){
+    GlucoseReadingString glstr = GetGLChar(gl); 
 
     // Clear bg
     UiClearCenteredText((EPD_2in13_V4_HEIGHT / 2) - 25, EPD_2in13_V4_WIDTH / 2, glstr.bg.c_str(), &Font64);
