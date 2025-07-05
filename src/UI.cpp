@@ -65,7 +65,11 @@ static GlucoseLevelString GetGLChar(double bg, double delta, long epoch){
     int hours = utc->tm_hour;
     // ajust hours if 12h time
     bool AM = false;
-    if (config.twelveHourTime && hours > 12){hours -= 12;}
+    if (config.twelveHourTime){
+        if (hours == 12){AM = false;}
+        else if (hours > 12){hours -= 12;}
+        else {AM = true;}
+    }
     std::string minutesString;
     std::string hoursString;
 
