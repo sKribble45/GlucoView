@@ -75,9 +75,10 @@ string randomString(size_t length) {
 }
 
 void Config(){
+    UserConfig config;
     string ApPassword = "glucoview_"+randomString(5);
-    HostConfigAP(savedConfig, "GlucoView", ApPassword.c_str());
-    SaveConfig(savedConfig);
+    HostConfigAP(config, "GlucoView", ApPassword.c_str());
+    SaveConfig(config);
 }
 
 void NoData(){
@@ -132,8 +133,8 @@ unsigned long GetEpoch(){
 }
 
 
-GlucoseLevel GetBG(){
-    Follower follower(true, savedConfig.dexcomUsername, savedConfig.dexcomPassword);
+GlucoseLevel GetBG(UserConfig config){
+    Follower follower(true, config.dexcomUsername, config.dexcomPassword);
     // follower.getNewSessionID();
     if (!follower.getNewSessionID()){
         if (dexErrors == 0){
@@ -180,8 +181,8 @@ GlucoseLevel GetBG(){
     return gl;
 }
 
-void UpdateDisplay(){
-    GlucoseLevel gl = GetBG();
+void UpdateDisplay(UserConfig config){
+    GlucoseLevel gl = GetBG(config);
 
     unsigned long currentTime = GetEpoch();
 
@@ -222,15 +223,15 @@ void UpdateDisplay(){
     else {Sleep(sleepTime +2);} //TODO: add 2 to sleep time if its missing readings.
 }
 
-void OnStart() {
-    if (ConnectToNetwork(savedConfig.wifiSsid, savedConfig.wifiPassword)){
+void OnStart(UserConfig config) {
+    if (ConnectToNetwork(config.wifiSsid, config.wifiPassword)){
         noWifiPrev = false;
         wifiTimoutPrev = false;
-        UpdateDisplay();
+        UpdateDisplay(config);
     }
     else{
         //TODO: In the userconfig struct make the wifi credentials into a WifiNetwork struct
-        WifiNetwork savedNetwork = {savedConfig.wifiSsid, savedConfig.wifiPassword};
+        WifiNetwork savedNetwork = {config.wifiSsid, config.wifiPassword};
         bool savedNetworkExists = SavedNetworkExists(savedNetwork);
         // if (!savedNetworkExists && !noWifiPrev){
         //     // try again :D
@@ -280,15 +281,15 @@ void setup(){
     Serial.println("Display initilised.");
 
     wakeup_reason = esp_sleep_get_wakeup_cause();
-    LoadConfig();
-    bool configExists = ConfigExists();
-    if (!configExists || TEST_CONFIG || wakeup_reason == ESP_SLEEP_WAKEUP_EXT0){
+    UserConfig config;
+    LoadConfig(config);
+    if (!ConfigExists(config) || TEST_CONFIG || wakeup_reason == ESP_SLEEP_WAKEUP_EXT0){
         Serial.println("config");
         Config();
         ESP.restart();
     }
     
-    OnStart();
+    OnStart(config);
 
 }
 

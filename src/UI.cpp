@@ -54,6 +54,8 @@ void UiClearCenteredText(int Xstart, int Ystart, const char * pString, sFONT* Fo
 
 // Makes the gl into a string version ready for drawing to the screen.
 static GlucoseLevelString GetGLChar(double bg, double delta, long epoch){
+    UserConfig config;
+    LoadConfig(config);
     // Get UTC time from the epoch
     time_t epochTime = epoch;
     struct tm *utc = gmtime(&epochTime);
@@ -63,21 +65,20 @@ static GlucoseLevelString GetGLChar(double bg, double delta, long epoch){
     int hours = utc->tm_hour;
     // ajust hours if 12h time
     bool AM = false;
-    if (savedConfig.twelveHourTime && hours > 12){hours -= 12;}
-
+    if (config.twelveHourTime && hours > 12){hours -= 12;}
     std::string minutesString;
     std::string hoursString;
 
     // Statring from a blank string add the 0 at the start if the number of minutes or hours is bellow 10 otherwise the time could look like this: 1:4 instead of this: 01:04
     if (minutes < 10){minutesString += "0";}
     minutesString += std::to_string(minutes);
-    if (hours < 10 && !savedConfig.twelveHourTime){hoursString += "0";}
+    if (hours < 10 && !config.twelveHourTime){hoursString += "0";}
     hoursString += std::to_string(hours);
 
     // Create a string with the hour and minute of the timestamp.
     std::string timestr = hoursString + ":" + minutesString;
     // add the suffix AM or PM to the 12h time.
-    if (savedConfig.twelveHourTime){
+    if (config.twelveHourTime){
         if(AM){timestr += " AM";}
         else{timestr += " PM";}
     }

@@ -11,14 +11,12 @@
 #include <unordered_map>
 using namespace std;
 
-UserConfig savedConfig;
-
 const char *PREFERENCES_KEY = "glucoview";
 
-void LoadConfig(){
+void LoadConfig(UserConfig &config){
     Preferences prefs;
     prefs.begin(PREFERENCES_KEY, false);
-    savedConfig = {
+    config = {
         prefs.getString("wifi-ssid", "none"),
         prefs.getString("wifi-password", "none"),
         prefs.getString("dex-username", "none"),
@@ -26,15 +24,13 @@ void LoadConfig(){
         prefs.getInt("twelve-hour-time", 10)
     };
     prefs.end();
-    Serial.print("12h Time: ");
-    Serial.println(savedConfig.twelveHourTime);
 }
 
-bool ConfigExists(){
-    if (savedConfig.wifiSsid == "none" ||
-        savedConfig.wifiPassword == "none" ||
-        savedConfig.dexcomUsername == "none" ||
-        savedConfig.dexcomPassword == "none"){
+bool ConfigExists(UserConfig config){
+    if (config.wifiSsid == "none" ||
+        config.wifiPassword == "none" ||
+        config.dexcomUsername == "none" ||
+        config.dexcomPassword == "none"){
         return false;
     }
     return true;

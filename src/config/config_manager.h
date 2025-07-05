@@ -13,11 +13,8 @@ typedef struct {
     bool twelveHourTime;
 } UserConfig;
 
-
-extern RTC_DATA_ATTR UserConfig savedConfig;
-
-void LoadConfig();
-bool ConfigExists();
+void LoadConfig(UserConfig &config);
+bool ConfigExists(UserConfig config);
 void SaveConfig(UserConfig config);
 void HostConfigAP(UserConfig &config,String APssid, String APpassword);
 
