@@ -159,8 +159,6 @@ bool Follower::GlucoseLevelsNow()
         if (httpResponseCode == HTTP_CODE_OK)
         {
             String response = http.getString();
-            Serial.print("Json reponse: ");
-            Serial.println(response);
             // Parse the JSON response
             JsonDocument doc;
             DeserializationError error = deserializeJson(doc, response);
@@ -175,20 +173,12 @@ bool Follower::GlucoseLevelsNow()
             // Extract the blood glucose value
             // GlucoseNow.mg_dl = doc[0]["Value"];
             GlucoseNow.bg = convertToMmol(doc[0]["Value"]);
-            Serial.print("Blood Glucose Level: ");
-            Serial.println(GlucoseNow.bg);
 
             GlucoseNow.trend_description = doc[0]["Trend"].as<const char *>();
             GlucoseNow.trend_Symbol = getTrendSymbol(GlucoseNow.trend_description);
-            Serial.print("current trend: ");
-            Serial.println(GlucoseNow.trend_Symbol);
 
             GlucoseNow.timestamp = convertToUnixTimestamp(doc[0]["DT"].as<const char *>(), false);
             GlucoseNow.tztimestamp = convertToUnixTimestamp(doc[0]["DT"].as<const char *>(), true);
-            Serial.print("Bg Timestamp: ");
-            Serial.println(GlucoseNow.timestamp);
-            Serial.print("Bg TZ Timestamp: ");
-            Serial.println(GlucoseNow.tztimestamp);
             result = true;
         }
         else

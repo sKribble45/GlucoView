@@ -46,7 +46,7 @@ UBYTE *Epaper_Image;
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
 
-#define BUTTON_PIN D1
+#define BUTTON_PIN D5
 
 void Sleep(int sleep_seconds){
     WiFi.disconnect(true);
@@ -137,7 +137,9 @@ void PrintGlucose(GlucoseReading gl){
     Serial.print("Glucose Timestamp: ");
     Serial.print(gl.timestamp);
     Serial.print(", Tz adjusted: ");
-    Serial.print(gl.tztimestamp);
+    Serial.println(gl.tztimestamp);
+    Serial.print("Trend Arrow: ");
+    Serial.println(gl.trend_Symbol);
 }
 
 GlucoseReading GetBG(UserConfig config){
@@ -262,19 +264,21 @@ void UpdateMode(){
     Serial.print("Started Update mode, Waiting for update");
     UiUpdateMode();
     UiShow();
-    while (true);
+    while (true) {delay(1000);};
 }
 
 void setup(){
     Serial.begin(115200);
     wakeup_reason = esp_sleep_get_wakeup_cause();
+    pinMode(BUTTON_PIN, INPUT_PULLDOWN);
     int buttonValue = digitalRead(BUTTON_PIN);
+
     Serial.println("Initialise display");
     DispInit();
     Serial.println("Display initilised.");
+
     // If it hasnt woken up from sleep because of the button press (so not pairing) and the button is down (when it is plugged )
     if (wakeup_reason != ESP_SLEEP_WAKEUP_EXT0 && buttonValue) {UpdateMode();}
-    
     UserConfig config;
     LoadConfig(config);
     if (!ConfigExists(config) || TEST_CONFIG || wakeup_reason == ESP_SLEEP_WAKEUP_EXT0){
@@ -282,9 +286,8 @@ void setup(){
         Config();
         ESP.restart();
     }
-    
-    OnStart(config);
 
+    OnStart(config);
 }
 
 

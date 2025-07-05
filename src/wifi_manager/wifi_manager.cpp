@@ -97,8 +97,10 @@ bool ConnectToNetwork(String ssid, String password){
     int waitProgress = 0;
     Serial.print("Attempting to connect to ");
     Serial.println(ssid);
+
+    Serial.println("Status [6: DISCONNECTED, 5: CONNECTION_LOST, 4: CONNECT_FAILED, 3: WL_CONNECTED, 2: SCAN_COMPLETED, 1: NO_SSID_AVAIL, 0: IDLE]: ");
     while (WiFi.status() != WL_CONNECTED && waitProgress <= (waiTimeLimitS * 2)){
-        Serial.println(WiFi.status());
+        Serial.print(WiFi.status());
         delay(500);
         waitProgress ++;
     }
