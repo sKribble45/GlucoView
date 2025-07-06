@@ -8,6 +8,7 @@
 #include <ctime>
 #include "config/config_manager.h"
 #include "dexcom/Dexcom_follow.h"
+#include <string>
 using namespace std;
 
 UBYTE *MainImage;

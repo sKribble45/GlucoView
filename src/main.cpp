@@ -18,7 +18,6 @@
 #include "time.h"
 using namespace std;
 
-
 esp_sleep_wakeup_cause_t wakeup_reason;
 RTC_DATA_ATTR GlucoseReading prevGl;
 RTC_DATA_ATTR bool noDataPrev = false;
@@ -74,7 +73,7 @@ string randomString(size_t length) {
     return result;
 }
 
-void Config(){
+void StartConfig(){
     UserConfig config;
     string ApPassword = "glucoview_"+randomString(5);
     HostConfigAP(config, "GlucoView", ApPassword.c_str());
@@ -292,7 +291,7 @@ void setup(){
     // If it was woken up by the button press (or config dosnt exist) enter configuration mode.
     if (!ConfigExists(config) || wakeup_reason == ESP_SLEEP_WAKEUP_EXT0){
         Serial.println("Entering Configuration");
-        Config();
+        StartConfig();
         // Restart the device after configuration.
         ESP.restart();
     }

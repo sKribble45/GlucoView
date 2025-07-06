@@ -17,13 +17,14 @@ void LoadConfig(UserConfig &config){
     Preferences prefs;
     prefs.begin(PREFERENCES_KEY, false);
     // Read all of the configuration values.
-    config = {
-        prefs.getString("wifi-ssid", "none"),
-        prefs.getString("wifi-password", "none"),
-        prefs.getString("dex-username", "none"),
-        prefs.getString("dex-password", "none"),
-        prefs.getInt("twelve-hour-time", 10)
-    };
+    config.wifiSsid = prefs.getString("wifi-ssid", "none");
+    config.wifiPassword = prefs.getString("wifi-password", "none");
+    config.dexcomUsername = prefs.getString("dex-username", "none");
+    config.dexcomPassword = prefs.getString("dex-password", "none");
+    config.twelveHourTime = prefs.getInt("twelve-hour-time", 10);
+    // for (pair<string, ConfigValue> value : config){
+    //     value.second.
+    // }
     prefs.end();
 }
 
@@ -98,7 +99,7 @@ void HostConfigAP(UserConfig &config,String APssid, String APpassword){
         }
         prevConnectedClients = connectedClients;
 
-        WiFiClient client = server.available();   // Listen for incoming clients
+        WiFiClient client = server.accept();   // Listen for incoming clients
 
         if (client) {
             Serial.println("New Client.");
@@ -147,7 +148,7 @@ void HostConfigAP(UserConfig &config,String APssid, String APpassword){
                                 if (queryParsed["twelve_hour_time"] == "on"){twelveHourTime = true;}
                                 else{twelveHourTime = false;}
 
-                                
+
                                 config = {
                                     queryParsed["wifi_ssid"].c_str(),
                                     queryParsed["wifi_password"].c_str(),
@@ -155,6 +156,7 @@ void HostConfigAP(UserConfig &config,String APssid, String APpassword){
                                     queryParsed["dexcom_password"].c_str(),
                                     twelveHourTime
                                 };
+                                Serial.println("");
 
                                 finishedConfig = true;
 

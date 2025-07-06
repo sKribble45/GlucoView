@@ -3,6 +3,7 @@
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
+#include <WiFi.h>
 
 // Dexcom base API urls
 const char *DEXCOM_BASE_URL = "https://share2.dexcom.com/ShareWebServices/Services";
