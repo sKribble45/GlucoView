@@ -19,7 +19,6 @@
 using namespace std;
 
 
-const bool TEST_CONFIG = false;
 esp_sleep_wakeup_cause_t wakeup_reason;
 RTC_DATA_ATTR GlucoseReading prevGl;
 RTC_DATA_ATTR bool noDataPrev = false;
@@ -31,7 +30,7 @@ RTC_DATA_ATTR int partialUpdates = 0;
 RTC_DATA_ATTR int dexErrors = 0;
 
 
-// sleep times
+// Sleep times.
 const int NO_TIME_SLEEP = 20;
 const int NO_DATA_SLEEP = 5*60;
 const int SHORT_NO_DATA_SLEEP = 20;
@@ -65,6 +64,8 @@ void Sleep(int sleep_seconds){
 string randomString(size_t length) {
     const string characterSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/*+-=";
     string result;
+    // Set random seed to the time.
+    // TODO: make this not time based.
     srand(time(0));
 
     for (size_t i = 0; i < length; ++i) {
@@ -104,6 +105,7 @@ unsigned long GetEpoch(){
     int forceUpdates = 0;
     timeClient.begin();
     while(!timeClient.update() && forceUpdates <= forceUpdateLimit) {
+        // Try and force the timeclient update.
         timeClient.forceUpdate();
         Serial.println("Timeclient not updated, forcing update.");
         forceUpdates ++;
@@ -122,7 +124,7 @@ unsigned long GetEpoch(){
         }
     }
     else{
-        currentTime = timeClient.getEpochTime(); ////+ 1 * 60 *60;
+        currentTime = timeClient.getEpochTime();
     }
 
 
@@ -144,14 +146,16 @@ void PrintGlucose(GlucoseReading gl){
 
 GlucoseReading GetBG(UserConfig config){
     Follower follower(true, config.dexcomUsername, config.dexcomPassword);
-    // follower.getNewSessionID();
+
     if (!follower.getNewSessionID()){
+        // On failure to connect to the dexcom servers display a warning.
         if (dexErrors == 0){
             UiFullClear();
             UiWarning("Dexcom Error", "Error connecting to dexcom servers");
             UiShow();
         }
         if (dexErrors < 3){dexErrors++;}
+        // if there has been 3 consecutive dexcom errors tell the user that they may want to update their credentials.
         else{
             UiFullClear(); 
             UiWarning("Dexcom Error", "You may want to consider re-pairing using the pairing button on the left side of the device as this error can be caused by inputing your dexcom credentials wrong."); 
@@ -177,29 +181,34 @@ GlucoseReading GetBG(UserConfig config){
 }
 
 void UpdateDisplay(UserConfig config){
-    // Get the blood glucose level from dexcom.
+    // Get the blood glucose reading from dexcom.
     GlucoseReading gl = GetBG(config);
 
+    // Get the current epoch time.
     unsigned long currentTime = GetEpoch();
 
     // no longer need wifi so turn it off to save some power.
     WiFi.disconnect(true);
     WiFi.mode(WIFI_OFF);
 
-    // display the glucose and delta on the display.
-    
+    // Partial update if it can (if it has shown the glucose screen last) otherwise do a full update.
     if (uiLastScreen != GLUCOSE || partialUpdates >= 10){
         UiGlucose(gl);
         UiShow();
         partialUpdates = 0;
     }
     else{
+        // write the previous screen to memory to tell the display it has already displayed it. (necccicary for partial update)
         UiGlucose(prevGl);
         UiWriteToMem();
 
+        // Clear the area where the glucose text was displayed to be overwriten.
         UiClearGlucose(prevGl);
+        // Write the glucose screen to buffer.
         UiGlucose(gl);
+        // Partial update the display, showing the image.
         UiShowPartial();
+        // Increment a counter so that it full refreshes every 10 partial.
         partialUpdates ++;
     }
     // set the previous glucose to current glucose.
@@ -228,10 +237,6 @@ void OnStart(UserConfig config) {
         //TODO: In the userconfig struct make the wifi credentials into a WifiNetwork struct
         WifiNetwork savedNetwork = {config.wifiSsid, config.wifiPassword};
         bool savedNetworkExists = SavedNetworkExists(savedNetwork);
-        // if (!savedNetworkExists && !noWifiPrev){
-        //     // try again :D
-        //     savedNetworkExists = SavedNetworkExists(savedWifiNetwork);
-        // }
         if (savedNetworkExists){
             Serial.println("A saved wifi network exists :)");
             if (wifiTimoutPrev){
@@ -269,7 +274,9 @@ void UpdateMode(){
 
 void setup(){
     Serial.begin(115200);
+    // Get the reason it was woken from sleep.
     wakeup_reason = esp_sleep_get_wakeup_cause();
+    // Pull down the button pin to ground so it can see a change when shorted to 3.3v
     pinMode(BUTTON_PIN, INPUT_PULLDOWN);
     int buttonValue = digitalRead(BUTTON_PIN);
 
@@ -279,14 +286,18 @@ void setup(){
 
     // If it hasnt woken up from sleep because of the button press (so not pairing) and the button is down (when it is plugged )
     if (wakeup_reason != ESP_SLEEP_WAKEUP_EXT0 && buttonValue) {UpdateMode();}
+    
     UserConfig config;
     LoadConfig(config);
-    if (!ConfigExists(config) || TEST_CONFIG || wakeup_reason == ESP_SLEEP_WAKEUP_EXT0){
+    // If it was woken up by the button press (or config dosnt exist) enter configuration mode.
+    if (!ConfigExists(config) || wakeup_reason == ESP_SLEEP_WAKEUP_EXT0){
         Serial.println("Entering Configuration");
         Config();
+        // Restart the device after configuration.
         ESP.restart();
     }
 
+    // Run the main start code
     OnStart(config);
 }
 

@@ -16,6 +16,7 @@ const char *PREFERENCES_KEY = "glucoview";
 void LoadConfig(UserConfig &config){
     Preferences prefs;
     prefs.begin(PREFERENCES_KEY, false);
+    // Read all of the configuration values.
     config = {
         prefs.getString("wifi-ssid", "none"),
         prefs.getString("wifi-password", "none"),
@@ -27,6 +28,7 @@ void LoadConfig(UserConfig &config){
 }
 
 bool ConfigExists(UserConfig config){
+    // "none" is the value if it has failed to read the configuration values.
     if (config.wifiSsid == "none" ||
         config.wifiPassword == "none" ||
         config.dexcomUsername == "none" ||
@@ -120,12 +122,16 @@ void HostConfigAP(UserConfig &config,String APssid, String APpassword){
                             Serial.println(httpRequest);
                             int savePostIndex = httpRequest.indexOf("GET /?");
                             if (savePostIndex >= 0) {
+                                // Get the configuration section of the http request e.g. "foo=bar, blah=on"
                                 string query = httpRequest.c_str();
                                 query = query.substr(savePostIndex + 6);
                                 query = query.substr(0, query.find(' '));
+
+                                // print the query for debugging.
                                 Serial.print("Query: ");
                                 Serial.println(query.c_str());
                                 
+                                // Convert the http request to a unordered map.
                                 unordered_map<string, string> queryParsed = parseQueryString(query);
 
                                 for (auto& p : queryParsed){
@@ -135,13 +141,14 @@ void HostConfigAP(UserConfig &config,String APssid, String APpassword){
                                     Serial.print(p.second.c_str());
                                     Serial.println("]");
                                 }
-
+                                
+                                // A checkbox by defult is ether "on" or "off" this converts it to a boolean (true or false)
                                 bool twelveHourTime;
                                 if (queryParsed["twelve_hour_time"] == "on"){twelveHourTime = true;}
                                 else{twelveHourTime = false;}
 
-
-                                config = { 
+                                
+                                config = {
                                     queryParsed["wifi_ssid"].c_str(),
                                     queryParsed["wifi_password"].c_str(),
                                     queryParsed["dexcom_username"].c_str(),

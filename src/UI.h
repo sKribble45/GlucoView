@@ -30,7 +30,8 @@ typedef enum {
     WARNING = 1,
     GLUCOSE = 2,
     WARNING_GLUCOSE = 3,
-    CONFIG = 4
+    CONFIG = 4,
+    UPDATE = 5
 } UiScreen;
 
 extern RTC_DATA_ATTR UiScreen uiLastScreen;
