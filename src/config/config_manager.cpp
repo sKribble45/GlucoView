@@ -13,41 +13,101 @@ using namespace std;
 
 const char *PREFERENCES_KEY = "glucoview";
 
-void LoadConfig(UserConfig &config){
+
+// Edit this when adding a new configuration value along with the html.
+Config CONFIG_TEMPLATE = {
+    {"wifi-ssid", ""},
+    {"wifi-password", ""},
+    {"dex-username", ""},
+    {"dex-password", ""},
+    {"12h-time", false}
+};
+
+void PrintConfigValues(Config config){
+    Serial.print("{");
+    // Loop through all entries.
+    for (auto& p : config){
+        Serial.print("{");
+        Serial.print(p.first.c_str());
+        Serial.print(", ");
+        // Prints the value.
+        if (holds_alternative<String>(p.second)){
+            Serial.print(get<String>(p.second).c_str());
+        }
+        else if (holds_alternative<int>(p.second)){
+            Serial.print(get<int>(p.second));
+        }
+        else if (holds_alternative<double>(p.second)){
+            Serial.print(get<double>(p.second));
+        }
+        else if (holds_alternative<bool>(p.second)){
+            Serial.print(get<bool>(p.second));
+        }
+        Serial.print("}, ");
+    }
+    Serial.println("}");
+}
+
+void LoadConfig(Config &config){
     Preferences prefs;
     prefs.begin(PREFERENCES_KEY, false);
     // Read all of the configuration values.
-    config.wifiSsid = prefs.getString("wifi-ssid", "none");
-    config.wifiPassword = prefs.getString("wifi-password", "none");
-    config.dexcomUsername = prefs.getString("dex-username", "none");
-    config.dexcomPassword = prefs.getString("dex-password", "none");
-    config.twelveHourTime = prefs.getInt("twelve-hour-time", 10);
-    // for (pair<string, ConfigValue> value : config){
-    //     value.second.
-    // }
+    for (pair<string, ConfigValue> templateEntry : CONFIG_TEMPLATE){
+        // if the value is of a certain type in the template read that type from storage and write it to the config in the same location.
+        if (holds_alternative<int>(templateEntry.second)){
+            // "get<int>(templateEntry.second)" uses the value from the template as the value returned after it has failed to retrieve the data from storage.
+            config[templateEntry.first] = prefs.getInt(templateEntry.first.c_str(), get<int>(templateEntry.second));
+        }
+        else if (holds_alternative<String>(templateEntry.second)){
+            config[templateEntry.first] = prefs.getString(templateEntry.first.c_str(), get<String>(templateEntry.second));
+        }
+        else if (holds_alternative<double>(templateEntry.second)){
+            config[templateEntry.first] = prefs.getDouble(templateEntry.first.c_str(), get<double>(templateEntry.second));
+        }
+        else if (holds_alternative<bool>(templateEntry.second)){
+            config[templateEntry.first] = (bool)prefs.getInt(templateEntry.first.c_str(), get<bool>(templateEntry.second));
+        }
+    }
+    
     prefs.end();
 }
 
-bool ConfigExists(UserConfig config){
-    // "none" is the value if it has failed to read the configuration values.
-    if (config.wifiSsid == "none" ||
-        config.wifiPassword == "none" ||
-        config.dexcomUsername == "none" ||
-        config.dexcomPassword == "none"){
-        return false;
+bool ConfigExists(Config config){
+    if (config.size() <= 0){return false;}
+
+    int numConfigValues = CONFIG_TEMPLATE.size();
+    int configValuesEquivelentToTemplate = 0;
+    for (pair<string, ConfigValue> templateEntry : CONFIG_TEMPLATE){
+        // if the value in the config is the same as the template add one to the counter checking how many. 
+        //(counter is required just in case the value in config exists just is set to the same value in the template)
+        if (config[templateEntry.first] == templateEntry.second){
+            configValuesEquivelentToTemplate ++;
+        }
     }
-    return true;
+    if (configValuesEquivelentToTemplate == numConfigValues){return false;}
+    else{return true;}
 }
 
 
-void SaveConfig(UserConfig config){
+void SaveConfig(Config config){
     Preferences prefs;
     prefs.begin(PREFERENCES_KEY, false);
-    prefs.putString("wifi-ssid", config.wifiSsid);
-    prefs.putString("wifi-password", config.wifiPassword);
-    prefs.putString("dex-username", config.dexcomUsername);
-    prefs.putString("dex-password", config.dexcomPassword);
-    prefs.putInt("twelve-hour-time", config.twelveHourTime); // for some reason bool dosnt work :( so i have to use int.
+    for (pair<string, ConfigValue> configEntry : config){
+        if (holds_alternative<int>(configEntry.second)){
+            prefs.putInt(configEntry.first.c_str(), get<int>(configEntry.second));
+        }
+        else if (holds_alternative<String>(configEntry.second)){
+            prefs.putString(configEntry.first.c_str(), get<String>(configEntry.second));
+        }
+        else if (holds_alternative<double>(configEntry.second)){
+            prefs.putDouble(configEntry.first.c_str(), get<double>(configEntry.second));
+        }
+        else if (holds_alternative<bool>(configEntry.second)){ // Boolean dosnt work with saving:( no idea why so i used int.
+            prefs.putInt(configEntry.first.c_str(), get<bool>(configEntry.second));
+        }
+    }
+
+
     prefs.end();
 }
 unordered_map<string,string> parseQueryString(const string& query) {
@@ -71,7 +131,7 @@ unordered_map<string,string> parseQueryString(const string& query) {
 
 
 WiFiServer server(80);
-void HostConfigAP(UserConfig &config,String APssid, String APpassword){
+void HostConfigAP(Config &config,String APssid, String APpassword){
     String httpRequest;
     bool finishedConfig = false;
 
@@ -143,20 +203,29 @@ void HostConfigAP(UserConfig &config,String APssid, String APpassword){
                                     Serial.println("]");
                                 }
                                 
-                                // A checkbox by defult is ether "on" or "off" this converts it to a boolean (true or false)
-                                bool twelveHourTime;
-                                if (queryParsed["twelve_hour_time"] == "on"){twelveHourTime = true;}
-                                else{twelveHourTime = false;}
-
-
-                                config = {
-                                    queryParsed["wifi_ssid"].c_str(),
-                                    queryParsed["wifi_password"].c_str(),
-                                    queryParsed["dexcom_username"].c_str(),
-                                    queryParsed["dexcom_password"].c_str(),
-                                    twelveHourTime
-                                };
-                                Serial.println("");
+                                for (pair<string, string> queryEntry : queryParsed){
+                                    // If the name of the query entry e.g. "wifi-ssid" is in the template and what variable type it corosponds to.
+                                    if (CONFIG_TEMPLATE.contains(queryEntry.first)){
+                                        // If its an int, convert the string recieved into a intager. (same thing for the rest)
+                                        if (holds_alternative<int>(CONFIG_TEMPLATE[queryEntry.first])){
+                                            config[queryEntry.first] = stoi(queryEntry.second);
+                                        }
+                                        if (holds_alternative<String>(CONFIG_TEMPLATE[queryEntry.first])){
+                                            config[queryEntry.first] = queryEntry.second.c_str(); // convert to a char string to conver to String from std::string
+                                        }
+                                        if (holds_alternative<double>(CONFIG_TEMPLATE[queryEntry.first])){
+                                            config[queryEntry.first] = stod(queryEntry.second);
+                                        }
+                                        if (holds_alternative<bool>(CONFIG_TEMPLATE[queryEntry.first])){
+                                            // A checkbox in html has 2 states (on or off) this converts them into a boolean (true or false)
+                                            bool value;
+                                            if (queryEntry.second == "on"){value = true;}
+                                            else{value = false;}
+                                            config[queryEntry.first] = value;
+                                        }
+                                    }
+                                    
+                                }
 
                                 finishedConfig = true;
 

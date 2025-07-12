@@ -16,6 +16,7 @@
 #include "dexcom/dexcom_account.h"
 #include "driver/rtc_io.h"
 #include "time.h"
+#include <nvs_flash.h>
 using namespace std;
 
 esp_sleep_wakeup_cause_t wakeup_reason;
@@ -74,7 +75,7 @@ string randomString(size_t length) {
 }
 
 void StartConfig(){
-    UserConfig config;
+    Config config;
     string ApPassword = "glucoview_"+randomString(5);
     HostConfigAP(config, "GlucoView", ApPassword.c_str());
     SaveConfig(config);
@@ -143,8 +144,8 @@ void PrintGlucose(GlucoseReading gl){
     Serial.println(gl.trend_Symbol);
 }
 
-GlucoseReading GetBG(UserConfig config){
-    Follower follower(true, config.dexcomUsername, config.dexcomPassword);
+GlucoseReading GetBG(Config config){
+    Follower follower(true, get<String>(config["dex-username"]), get<String>(config["dex-password"]));
 
     if (!follower.getNewSessionID()){
         // On failure to connect to the dexcom servers display a warning.
@@ -179,7 +180,7 @@ GlucoseReading GetBG(UserConfig config){
     return gl;
 }
 
-void UpdateDisplay(UserConfig config){
+void UpdateDisplay(Config config){
     // Get the blood glucose reading from dexcom.
     GlucoseReading gl = GetBG(config);
 
@@ -192,19 +193,19 @@ void UpdateDisplay(UserConfig config){
 
     // Partial update if it can (if it has shown the glucose screen last) otherwise do a full update.
     if (uiLastScreen != GLUCOSE || partialUpdates >= 10){
-        UiGlucose(gl);
+        UiGlucose(gl, config);
         UiShow();
         partialUpdates = 0;
     }
     else{
         // write the previous screen to memory to tell the display it has already displayed it. (necccicary for partial update)
-        UiGlucose(prevGl);
+        UiGlucose(prevGl, config);
         UiWriteToMem();
 
         // Clear the area where the glucose text was displayed to be overwriten.
-        UiClearGlucose(prevGl);
+        UiClearGlucose(prevGl, config);
         // Write the glucose screen to buffer.
-        UiGlucose(gl);
+        UiGlucose(gl, config);
         // Partial update the display, showing the image.
         UiShowPartial();
         // Increment a counter so that it full refreshes every 10 partial.
@@ -226,15 +227,22 @@ void UpdateDisplay(UserConfig config){
     else {Sleep(sleepTime +2);} //TODO: add 2 to sleep time if its missing readings.
 }
 
-void OnStart(UserConfig config) {
-    if (ConnectToNetwork(config.wifiSsid, config.wifiPassword)){
+void OnStart(Config config) {
+    String wifiSsid = get<String>(config["wifi-ssid"]);
+    String wifiPassword = get<String>(config["wifi-password"]);
+    Serial.print("ssid: ");
+    Serial.print(wifiSsid);
+    Serial.print(" , password: ");
+    Serial.println(wifiPassword);
+
+    if (ConnectToNetwork(wifiSsid, wifiPassword)){
         noWifiPrev = false;
         wifiTimoutPrev = false;
         UpdateDisplay(config);
     }
     else{
         //TODO: In the userconfig struct make the wifi credentials into a WifiNetwork struct
-        WifiNetwork savedNetwork = {config.wifiSsid, config.wifiPassword};
+        WifiNetwork savedNetwork = {wifiSsid, wifiPassword};
         bool savedNetworkExists = SavedNetworkExists(savedNetwork);
         if (savedNetworkExists){
             Serial.println("A saved wifi network exists :)");
@@ -268,7 +276,19 @@ void UpdateMode(){
     Serial.print("Started Update mode, Waiting for update");
     UiUpdateMode();
     UiShow();
-    while (true) {delay(1000);};
+    while (digitalRead(BUTTON_PIN)){delay(100);}
+    while (true) {
+        if (digitalRead(BUTTON_PIN)){
+            UiFullClear();
+            UiWarning("Are you sure", "erasing the flash is perminent and will remove any configuration that is stored on the device. Press button to continue");
+            UiShow();
+            while (digitalRead(BUTTON_PIN)){delay(100);}
+            while (!digitalRead(BUTTON_PIN)){delay(100);}
+            nvs_flash_erase(); // erase the NVS partition.
+            nvs_flash_init(); // init the NVS partition.
+            ESP.restart();
+        }
+    };
 }
 
 void setup(){
@@ -285,9 +305,15 @@ void setup(){
 
     // If it hasnt woken up from sleep because of the button press (so not pairing) and the button is down (when it is plugged )
     if (wakeup_reason != ESP_SLEEP_WAKEUP_EXT0 && buttonValue) {UpdateMode();}
-    
-    UserConfig config;
+
+    //!! DO NOT REMOVE CODE BEFORE THIS MESSAGE UNLESS YOU KNOW WHAT YOU ARE DOING (you may need to take appart the device to re-program if you do)
+
+    // Delay to connect to serial port.
+    // delay(2000);0
+
+    Config config;
     LoadConfig(config);
+    PrintConfigValues(config);
     // If it was woken up by the button press (or config dosnt exist) enter configuration mode.
     if (!ConfigExists(config) || wakeup_reason == ESP_SLEEP_WAKEUP_EXT0){
         Serial.println("Entering Configuration");

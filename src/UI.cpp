@@ -60,9 +60,10 @@ struct GlucoseReadingString{
 };
 
 // Makes the gl into a string version ready for drawing to the screen.
-static GlucoseReadingString GetGLChar(GlucoseReading gl){
-    UserConfig config;
-    LoadConfig(config);
+static GlucoseReadingString GetGLChar(GlucoseReading gl, Config config){
+    // Config config;
+    // LoadConfig(config);
+    bool twelveHourTime = get<bool>(config["12h-time"]);
     // Get UTC time from the epoch
     time_t epochTime = gl.tztimestamp;
     struct tm *utc = gmtime(&epochTime);
@@ -72,7 +73,7 @@ static GlucoseReadingString GetGLChar(GlucoseReading gl){
     int hours = utc->tm_hour;
     // ajust hours if 12h time
     bool AM = false;
-    if (config.twelveHourTime){
+    if (twelveHourTime){
         if (hours == 12){AM = false;}
         else if (hours > 12){hours -= 12;}
         else {AM = true;}
@@ -83,13 +84,13 @@ static GlucoseReadingString GetGLChar(GlucoseReading gl){
     // Statring from a blank string add the 0 at the start if the number of minutes or hours is bellow 10 otherwise the time could look like this: 1:4 instead of this: 01:04
     if (minutes < 10){minutesString += "0";}
     minutesString += to_string(minutes);
-    if (hours < 10 && !config.twelveHourTime){hoursString += "0";}
+    if (hours < 10 && !twelveHourTime){hoursString += "0";}
     hoursString += to_string(hours);
 
     // Create a string with the hour and minute of the timestamp.
     string timestr = hoursString + ":" + minutesString;
     // add the suffix AM or PM to the 12h time.
-    if (config.twelveHourTime){
+    if (twelveHourTime){
         if(AM){timestr += " AM";}
         else{timestr += " PM";}
     }
@@ -108,9 +109,8 @@ static GlucoseReadingString GetGLChar(GlucoseReading gl){
 }
 
 // Draw Glucose screen (includes glucose level, delta and timestamp)
-void UiGlucose(GlucoseReading gl){
-    GlucoseReadingString glstr = GetGLChar(gl); 
-
+void UiGlucose(GlucoseReading gl, Config config){
+    GlucoseReadingString glstr = GetGLChar(gl, config); 
     // Draw bg
     Paint_DrawString_EN(true, (EPD_2in13_V4_HEIGHT / 2) - 25, EPD_2in13_V4_WIDTH / 2, glstr.bg.c_str(), &Font64, BLACK, WHITE);
     // Draw Delta
@@ -121,8 +121,8 @@ void UiGlucose(GlucoseReading gl){
     uiLastScreen = GLUCOSE;
 }
 // Clear Glucose screen (includes glucose level, delta and timestamp) ready for partial update.
-void UiClearGlucose(GlucoseReading gl){
-    GlucoseReadingString glstr = GetGLChar(gl); 
+void UiClearGlucose(GlucoseReading gl, Config config){
+    GlucoseReadingString glstr = GetGLChar(gl, config);
 
     // Clear bg
     UiClearCenteredText((EPD_2in13_V4_HEIGHT / 2) - 25, EPD_2in13_V4_WIDTH / 2, glstr.bg.c_str(), &Font64);
@@ -138,8 +138,8 @@ void UiClearGlucose(GlucoseReading gl){
 // Displays a warning message on screen with subtext.
 void UiWarning(const char *message, const char *subtext){
     Paint_DrawString_EN(true, EPD_2in13_V4_HEIGHT / 2, EPD_2in13_V4_WIDTH / 2, message, &Font24, WHITE, BLACK);
-    Paint_DrawString_EN(true, EPD_2in13_V4_HEIGHT / 2, (EPD_2in13_V4_WIDTH / 2) + Font24.Height, subtext, &Font8, WHITE, BLACK);
-    uiLastScreen = WARNING;
+    Paint_DrawString_EN(false, 10, (EPD_2in13_V4_WIDTH / 2) + Font24.Height, subtext, &Font8, WHITE, BLACK);
+    uiLastScreen = WARNING; 
 }
 
 // Displays a warning message on screen with a bg and subtext.
@@ -192,6 +192,6 @@ void UiWebPageConectionPage(String pageLink){
 
 void UiUpdateMode(){
     Paint_DrawString_EN(true, EPD_2in13_V4_HEIGHT / 2, 15, "Update Mode", &Font24, WHITE, BLACK);
-    Paint_DrawString_EN(false, 0, 15 + (Font24.Height / 2), "Use platformio to flash the new image to the device.", &Font12, WHITE, BLACK);
+    Paint_DrawString_EN(false, 0, 15 + (Font24.Height / 2), "Use platformio to flash the new image to the device. Press button again to reset flash.", &Font12, WHITE, BLACK);
     uiLastScreen = UPDATE;
 }

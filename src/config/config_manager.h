@@ -1,6 +1,10 @@
 #include <Arduino.h>
 #include "wifi_manager/wifi_manager.h"
 #include "dexcom/dexcom_account.h"
+#include <unordered_map>
+#include <variant>
+#include <string>
+using namespace std;
 
 #ifndef __CONFIG_MANAGER_H
 #define __CONFIG_MANAGER_H
@@ -13,9 +17,14 @@ typedef struct {
     bool twelveHourTime;
 } UserConfig;
 
-void LoadConfig(UserConfig &config);
-bool ConfigExists(UserConfig config);
-void SaveConfig(UserConfig config);
-void HostConfigAP(UserConfig &config,String APssid, String APpassword);
+typedef variant<int, double, String, bool> ConfigValue;
+
+typedef unordered_map<string, ConfigValue> Config;
+
+void PrintConfigValues(Config config);
+void LoadConfig(Config &config);
+bool ConfigExists(Config config);
+void SaveConfig(Config config);
+void HostConfigAP(Config &config,String APssid, String APpassword);
 
 #endif

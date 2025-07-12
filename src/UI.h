@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <Arduino.h>
 #include "dexcom/Dexcom_follow.h"
-
+#include "config/config_manager.h"
 
 #ifndef __UI_H
 #define __UI_H
@@ -17,8 +17,8 @@ void UiShowPartial();
 void UiWriteToMem();
 void UiWiFiConectionPage(String ssid, String password);
 void UiWebPageConectionPage(String pageLink);
-void UiGlucose(GlucoseReading gl);
-void UiClearGlucose(GlucoseReading gl);
+void UiGlucose(GlucoseReading gl, Config config);
+void UiClearGlucose(GlucoseReading gl, Config config);
 void UiWarning(const char *message, const char *subtext);
 void UiWarningGlucose(const char *message, double bg,const char *subtext);
 void UiTextQrCode(int startX, int startY, const char *link);
