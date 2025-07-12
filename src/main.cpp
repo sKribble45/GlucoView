@@ -193,19 +193,19 @@ void UpdateDisplay(Config config){
 
     // Partial update if it can (if it has shown the glucose screen last) otherwise do a full update.
     if (uiLastScreen != GLUCOSE || partialUpdates >= 10){
-        UiGlucose(gl, config);
+        UiGlucose(gl);
         UiShow();
         partialUpdates = 0;
     }
     else{
         // write the previous screen to memory to tell the display it has already displayed it. (necccicary for partial update)
-        UiGlucose(prevGl, config);
+        UiGlucose(prevGl);
         UiWriteToMem();
 
         // Clear the area where the glucose text was displayed to be overwriten.
-        UiClearGlucose(prevGl, config);
+        UiClearGlucose(prevGl);
         // Write the glucose screen to buffer.
-        UiGlucose(gl, config);
+        UiGlucose(gl);
         // Partial update the display, showing the image.
         UiShowPartial();
         // Increment a counter so that it full refreshes every 10 partial.
@@ -309,11 +309,13 @@ void setup(){
     //!! DO NOT REMOVE CODE BEFORE THIS MESSAGE UNLESS YOU KNOW WHAT YOU ARE DOING (you may need to take appart the device to re-program if you do)
 
     // Delay to connect to serial port.
-    // delay(2000);0
+    // delay(2000);
 
     Config config;
     LoadConfig(config);
     PrintConfigValues(config);
+    // Load config to the ui.
+    UiInitConfig(config);
     // If it was woken up by the button press (or config dosnt exist) enter configuration mode.
     if (!ConfigExists(config) || wakeup_reason == ESP_SLEEP_WAKEUP_EXT0){
         Serial.println("Entering Configuration");

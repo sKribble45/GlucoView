@@ -13,7 +13,9 @@ using namespace std;
 
 UBYTE *MainImage;
 RTC_DATA_ATTR UiScreen uiLastScreen = NONE;
+Config UiConfig;
 
+// Initilise display.
 void DispInit(){
     DEV_Module_Init();
 
@@ -31,21 +33,29 @@ void DispInit(){
     Paint_NewImage(MainImage, EPD_2in13_V4_WIDTH, EPD_2in13_V4_HEIGHT, 90, WHITE); 
     Paint_Clear(WHITE);
 }
+// Initilise display configuration.
+void UiInitConfig(Config config){
+    UiConfig = config;
+}
+
+// Clear buffer.
 void UiFullClear(){
     Paint_SelectImage(MainImage);
     Paint_NewImage(MainImage, EPD_2in13_V4_WIDTH, EPD_2in13_V4_HEIGHT, 90, WHITE);  	
     Paint_Clear(WHITE);
 }
+// Refresh the display showing the frame buffer.
 void UiShow(){
     EPD_2in13_V4_Display(MainImage);
 }
+// Partial update the display.
 void UiShowPartial(){
     EPD_2in13_V4_Display_Partial(MainImage);
 }
+// Write the buffer to memory (used when partial updating occasionaly)
 void UiWriteToMem(){
     EPD_2in13_V4_Display_Mem(MainImage);
 }
-
 
 void UiClearCenteredText(int Xstart, int Ystart, const char * pString, sFONT* Font){
     int string_length = strlen(pString);
@@ -109,8 +119,8 @@ static GlucoseReadingString GetGLChar(GlucoseReading gl, Config config){
 }
 
 // Draw Glucose screen (includes glucose level, delta and timestamp)
-void UiGlucose(GlucoseReading gl, Config config){
-    GlucoseReadingString glstr = GetGLChar(gl, config); 
+void UiGlucose(GlucoseReading gl){
+    GlucoseReadingString glstr = GetGLChar(gl, UiConfig); 
     // Draw bg
     Paint_DrawString_EN(true, (EPD_2in13_V4_HEIGHT / 2) - 25, EPD_2in13_V4_WIDTH / 2, glstr.bg.c_str(), &Font64, BLACK, WHITE);
     // Draw Delta
@@ -121,8 +131,8 @@ void UiGlucose(GlucoseReading gl, Config config){
     uiLastScreen = GLUCOSE;
 }
 // Clear Glucose screen (includes glucose level, delta and timestamp) ready for partial update.
-void UiClearGlucose(GlucoseReading gl, Config config){
-    GlucoseReadingString glstr = GetGLChar(gl, config);
+void UiClearGlucose(GlucoseReading gl){
+    GlucoseReadingString glstr = GetGLChar(gl, UiConfig);
 
     // Clear bg
     UiClearCenteredText((EPD_2in13_V4_HEIGHT / 2) - 25, EPD_2in13_V4_WIDTH / 2, glstr.bg.c_str(), &Font64);
