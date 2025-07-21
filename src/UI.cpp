@@ -9,6 +9,8 @@
 #include "config/config_manager.h"
 #include "dexcom/Dexcom_follow.h"
 #include <string>
+#include "images/arrows.h"
+
 using namespace std;
 
 UBYTE *MainImage;
@@ -57,16 +59,25 @@ void UiWriteToMem(){
     EPD_2in13_V4_Display_Mem(MainImage);
 }
 
-void UiClearCenteredText(int Xstart, int Ystart, const char * pString, sFONT* Font){
+void UiClearText(bool centered, int Xstart, int Ystart, const char * pString, sFONT* Font){
+    int Xpoint;
+    int Ypoint;
     int string_length = strlen(pString);
-    int Xpoint = Xstart - ((Font->Width * string_length) / 2);
-    int Ypoint = Ystart - (Font->Height / 2);
+    if (centered){
+        Xpoint = Xstart - ((Font->Width * string_length) / 2);
+        Ypoint = Ystart - (Font->Height / 2);
+    }
+    else{
+        Xpoint = Xstart;
+        Ypoint = Ystart;
+    }
     Paint_ClearWindows(Xpoint, Ypoint, Xpoint + (Font->Width * string_length), Ypoint + Font->Height, WHITE);
 }
 struct GlucoseReadingString{
     String bg;
     String delta;
     String time;
+    const unsigned char* arrow;
 };
 
 // Makes the gl into a string version ready for drawing to the screen.
@@ -113,37 +124,71 @@ static GlucoseReadingString GetGLChar(GlucoseReading gl, Config config){
     char deltaFancy[5];
     if (gl.delta >= 0.0){ sprintf(deltaFancy, "+%.1f", gl.delta); }
     else{ sprintf(deltaFancy, "%.1f", gl.delta); }
-    GlucoseReadingString glchr = {bgChar, deltaFancy, timestr.c_str()};
+    
 
+    const unsigned char* arrow;
+    if (gl.trend_description == "DoubleUp" || gl.trend_description == "SingleUp") arrow = ArrowN_bits;
+    else if (gl.trend_description == "FortyFiveUp") arrow = ArrowNE_bits;
+    else if (gl.trend_description == "Flat") arrow = ArrowE_bits;
+    else if (gl.trend_description == "FortyFiveDown") arrow = ArrowSE_bits;
+    else if (gl.trend_description == "SingleDown" || gl.trend_description == "DoubleDown") arrow = ArrowS_bits;
+    arrow = ArrowE_bits;
+
+    GlucoseReadingString glchr = {bgChar, deltaFancy, timestr.c_str(), arrow};
     return glchr;
 }
 
 // Draw Glucose screen (includes glucose level, delta and timestamp)
 void UiGlucose(GlucoseReading gl){
-    GlucoseReadingString glstr = GetGLChar(gl, UiConfig); 
+    GlucoseReadingString glstr = GetGLChar(gl, UiConfig);
+    int glucoseOffset = 0;
+    if (glstr.bg.length() == 3){glucoseOffset = (EPD_2in13_V4_HEIGHT-((Font80.Width*3)+60))/2;}
     // Draw bg
-    Paint_DrawString_EN(true, (EPD_2in13_V4_HEIGHT / 2) - 25, EPD_2in13_V4_WIDTH / 2, glstr.bg.c_str(), &Font64, BLACK, WHITE);
+    Paint_DrawString_EN(false, 0+glucoseOffset, (EPD_2in13_V4_WIDTH / 2) - (Font80.Height/2), glstr.bg.c_str(), &Font80, BLACK, WHITE);
     // Draw Delta
-    Paint_DrawString_EN(true, (EPD_2in13_V4_HEIGHT / 2) + 80, (EPD_2in13_V4_WIDTH / 2) + 25, glstr.delta.c_str(), &Font20, WHITE, BLACK);
+    Paint_DrawString_EN(true, 215, 105, glstr.delta.c_str(), &Font20, BLACK, WHITE);
     // Draw timestamp
-    Paint_DrawString_EN(true, (EPD_2in13_V4_HEIGHT / 2), (EPD_2in13_V4_WIDTH / 2) + 45, glstr.time.c_str(), &Font16, WHITE, BLACK);
+    Paint_DrawString_EN(true, ((glstr.bg.length()*Font80.Width)/2)+glucoseOffset, 105, glstr.time.c_str(), &Font20, BLACK, WHITE);
+    // Draw arrow
+    Paint_DrawImage(glstr.arrow, 33, 192-(Font80.Width * (glstr.bg.length()-4)*-1)+glucoseOffset, 60, 60);
 
     uiLastScreen = GLUCOSE;
 }
 // Clear Glucose screen (includes glucose level, delta and timestamp) ready for partial update.
 void UiClearGlucose(GlucoseReading gl){
     GlucoseReadingString glstr = GetGLChar(gl, UiConfig);
-
-    // Clear bg
-    UiClearCenteredText((EPD_2in13_V4_HEIGHT / 2) - 25, EPD_2in13_V4_WIDTH / 2, glstr.bg.c_str(), &Font64);
-    // Clear Delta
-    UiClearCenteredText((EPD_2in13_V4_HEIGHT / 2) + 80, (EPD_2in13_V4_WIDTH / 2) + 25, glstr.delta.c_str(), &Font20);
-    // Clear timestamp
-    UiClearCenteredText((EPD_2in13_V4_HEIGHT / 2), (EPD_2in13_V4_WIDTH / 2) + 45, glstr.time.c_str(), &Font16);
+    int glucoseOffset = 0;
+    if (glstr.bg.length() == 3){glucoseOffset = (EPD_2in13_V4_HEIGHT-((Font80.Width*3)+60))/2;}
+    // Draw bg
+    UiClearText(false, 0+glucoseOffset, (EPD_2in13_V4_WIDTH / 2) - (Font80.Height/2), glstr.bg.c_str(), &Font80);
+    // Draw Delta
+    UiClearText(true, 215, 105, glstr.delta.c_str(), &Font20);
+    // Draw timestamp
+    UiClearText(true, ((glstr.bg.length()*Font80.Width)/2)+glucoseOffset, 105, glstr.time.c_str(), &Font20);
+    // Draw arrow
+    int arrowXPos = (192-(Font80.Width * (glstr.bg.length()-4)*-1)) + glucoseOffset;
+    int arrowYPos = 33;
+    Paint_ClearWindows(arrowXPos, arrowYPos, arrowXPos + 60, arrowYPos + 60, WHITE);
 }
 
+// Line through the glucose text.
+void UiGlucoseStrikethrough(){
+    Paint_DrawLine(0, (EPD_2in13_V4_WIDTH / 2)+5, EPD_2in13_V4_HEIGHT, (EPD_2in13_V4_WIDTH / 2)+5, WHITE, DOT_PIXEL_7X7, LINE_STYLE_SOLID);
+    Paint_DrawLine(0, (EPD_2in13_V4_WIDTH / 2)+5, EPD_2in13_V4_HEIGHT, (EPD_2in13_V4_WIDTH / 2)+5, BLACK, DOT_PIXEL_5X5, LINE_STYLE_SOLID);
+}
+// Clear the line through the glucose text.
+void UiGlucoseClearStrikethrough(){
+    Paint_ClearWindows(0, (EPD_2in13_V4_WIDTH / 2), EPD_2in13_V4_HEIGHT, (EPD_2in13_V4_WIDTH / 2)+10, WHITE);
+}
 
-
+// Warning message above glucose.
+void UiGlucoseWarning(String warning){
+    Paint_DrawString_EN(true, EPD_2in13_V4_HEIGHT/2, Font20.Height/2, warning.c_str(), &Font20, BLACK, WHITE);
+}
+// Clear warning message above glucose.
+void UiGlucoseClearWarning(String warning){
+    UiClearText(true, EPD_2in13_V4_HEIGHT/2, Font20.Height/2, warning.c_str(), &Font20);
+}
 
 // Displays a warning message on screen with subtext.
 void UiWarning(const char *message, const char *subtext){
@@ -152,14 +197,6 @@ void UiWarning(const char *message, const char *subtext){
     uiLastScreen = WARNING; 
 }
 
-// Displays a warning message on screen with a bg and subtext.
-void UiWarningGlucose(const char *message, double bg,const char *subtext){
-    char bgChar[5];
-    sprintf(bgChar, "%.1f", bg);
-    Paint_DrawString_EN(true, EPD_2in13_V4_HEIGHT / 2, EPD_2in13_V4_WIDTH / 2, message, &Font24, WHITE, BLACK);
-    Paint_DrawString_EN(true, EPD_2in13_V4_HEIGHT / 2, (EPD_2in13_V4_WIDTH / 2) + Font24.Height, bgChar, &Font20, WHITE, BLACK);
-    uiLastScreen = WARNING_GLUCOSE;
-}
 
 // Draws a QR Code onto the screen using text as an input.
 void UiTextQrCode(int startX, int startY, const char *link){

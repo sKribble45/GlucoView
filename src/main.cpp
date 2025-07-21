@@ -17,15 +17,17 @@
 #include "driver/rtc_io.h"
 #include "time.h"
 #include <nvs_flash.h>
+#include "images/arrows.h"
+#include "glucose_screen.h"
 using namespace std;
 
 esp_sleep_wakeup_cause_t wakeup_reason;
 RTC_DATA_ATTR GlucoseReading prevGl;
+
 RTC_DATA_ATTR bool noDataPrev = false;
 RTC_DATA_ATTR bool wifiTimoutPrev = false;
 RTC_DATA_ATTR int wakeupTime = 0;
 RTC_DATA_ATTR bool noWifiPrev = false;
-RTC_DATA_ATTR int partialUpdates = 0;
 
 RTC_DATA_ATTR int dexErrors = 0;
 
@@ -61,32 +63,11 @@ void Sleep(int sleep_seconds){
     //esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF); // very sleep deep *strech*
     esp_deep_sleep_start(); // COMENSE THE SLEEP!
 }
-string randomString(size_t length) {
-    const string characterSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/*+-=";
-    string result;
-    // Set random seed to the time.
-    // TODO: make this not time based.
-    srand(time(0));
-
-    for (size_t i = 0; i < length; ++i) {
-        result += characterSet[rand() % characterSet.size()];
-    }
-    return result;
-}
-
-void StartConfig(){
-    Config config;
-    string ApPassword = "glucoview_"+randomString(5);
-    HostConfigAP(config, "GlucoView", ApPassword.c_str());
-    SaveConfig(config);
-}
 
 void NoData(){
     if (noDataPrev){
         Serial.println("No Data!");
-        UiFullClear();
-        UiWarningGlucose("No Data", prevGl.bg,"No glucose reading from dexcom.");
-        UiShow();
+        DisplayGlucose(prevGl, true, "No Data");
         Sleep(NO_DATA_SLEEP);
     }
     else{
@@ -148,20 +129,22 @@ GlucoseReading GetBG(Config config){
     Follower follower(true, get<String>(config["dex-username"]), get<String>(config["dex-password"]));
 
     if (!follower.getNewSessionID()){
-        // On failure to connect to the dexcom servers display a warning.
-        if (dexErrors == 0){
-            UiFullClear();
-            UiWarning("Dexcom Error", "Error connecting to dexcom servers");
-            UiShow();
+        
+        // On failure to connect to the dexcom servers display no data.
+        if (dexErrors == 1){
+            DisplayGlucose(prevGl, true, "Dexcom Error");
         }
         if (dexErrors < 3){dexErrors++;}
         // if there has been 3 consecutive dexcom errors tell the user that they may want to update their credentials.
         else{
             UiFullClear(); 
-            UiWarning("Dexcom Error", "You may want to consider re-pairing using the pairing button on the left side of the device as this error can be caused by inputing your dexcom credentials wrong."); 
+            UiWarning("Dexcom Error", "You may want to consider re-pairing using the pairing button on the left side of the device as this error can be caused by inputing your dexcom credentials incorrectly."); 
             UiShow();
         }
-        Sleep(DEXCOM_ERROR_SLEEP);
+        if (dexErrors == 0){
+            if (!follower.getNewSessionID()){Sleep(DEXCOM_ERROR_SLEEP);}
+        }
+        else{Sleep(DEXCOM_ERROR_SLEEP);}
     }
     else{dexErrors = 0;}
     follower.GlucoseLevelsNow();
@@ -191,29 +174,7 @@ void UpdateDisplay(Config config){
     WiFi.disconnect(true);
     WiFi.mode(WIFI_OFF);
 
-    // Partial update if it can (if it has shown the glucose screen last) otherwise do a full update.
-    if (uiLastScreen != GLUCOSE || partialUpdates >= 10){
-        UiGlucose(gl);
-        UiShow();
-        partialUpdates = 0;
-    }
-    else{
-        // write the previous screen to memory to tell the display it has already displayed it. (necccicary for partial update)
-        UiGlucose(prevGl);
-        UiWriteToMem();
-
-        // Clear the area where the glucose text was displayed to be overwriten.
-        UiClearGlucose(prevGl);
-        // Write the glucose screen to buffer.
-        UiGlucose(gl);
-        // Partial update the display, showing the image.
-        UiShowPartial();
-        // Increment a counter so that it full refreshes every 10 partial.
-        partialUpdates ++;
-    }
-    // set the previous glucose to current glucose.
-    prevGl = gl;
-    //TODO: Make this neater.
+    DisplayGlucose(gl, false, "");
     
 
     // SLEEP!
@@ -222,7 +183,7 @@ void UpdateDisplay(Config config){
 
     // sleep for the next reading.
     wakeupTime = currentTime + sleepTime;
-    if (sleepTime < 0 && sleepTime > - 120){Sleep(10);}
+    if (sleepTime < 0 && sleepTime > -120){Sleep(10);}
     else if(sleepTime < 0){NoData();}
     else {Sleep(sleepTime +2);} //TODO: add 2 to sleep time if its missing readings.
 }
@@ -247,9 +208,7 @@ void OnStart(Config config) {
         if (savedNetworkExists){
             Serial.println("A saved wifi network exists :)");
             if (wifiTimoutPrev){
-                UiFullClear();
-                UiWarning("No Data", "Timed out when connecting to wifi network.");
-                UiShow();
+                DisplayGlucose(prevGl, true, "WiFi Timout");
                 Sleep(TIMOUT_WIFI_SLEEP);
             }
             Serial.println("Failed to connect to wifi network (timed out) :(");
@@ -258,9 +217,7 @@ void OnStart(Config config) {
         }
         else{
             if (noWifiPrev){
-                UiFullClear();
-                UiWarning("No Data", "No network found with matching ssid");
-                UiShow();
+                DisplayGlucose(prevGl, true, "No WiFi");
                 Sleep(NO_WIFI_SLEEP);
             }
             else{
@@ -291,6 +248,26 @@ void UpdateMode(){
     };
 }
 
+string randomString(size_t length) {
+    const string characterSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/*+-=";
+    string result;
+    // Set random seed to the time.
+    // TODO: make this not time based.
+    srand(time(0));
+
+    for (size_t i = 0; i < length; ++i) {
+        result += characterSet[rand() % characterSet.size()];
+    }
+    return result;
+}
+
+void StartConfig(){
+    Config config;
+    string ApPassword = "glucoview_"+randomString(5);
+    HostConfigAP(config, "GlucoView", ApPassword.c_str());
+    SaveConfig(config);
+}
+
 void setup(){
     Serial.begin(115200);
     // Get the reason it was woken from sleep.
@@ -306,7 +283,7 @@ void setup(){
     // If it hasnt woken up from sleep because of the button press (so not pairing) and the button is down (when it is plugged )
     if (wakeup_reason != ESP_SLEEP_WAKEUP_EXT0 && buttonValue) {UpdateMode();}
 
-    //!! DO NOT REMOVE CODE BEFORE THIS MESSAGE UNLESS YOU KNOW WHAT YOU ARE DOING (you may need to take appart the device to re-program if you do)
+    //!! DO NOT REMOVE CODE BEFORE THIS MESSAGE UNLESS YOU KNOW WHAT YOU ARE DOING (you may need to take appart the device to bootstrap so that you can re-program if you do)
 
     // Delay to connect to serial port.
     // delay(2000);
