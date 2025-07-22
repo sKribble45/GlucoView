@@ -134,7 +134,7 @@ static GlucoseReadingString GetGLChar(GlucoseReading gl, Config config){
     else if (gl.trend_description == "Flat") arrow = ArrowE_bits;
     else if (gl.trend_description == "FortyFiveDown") arrow = ArrowSE_bits;
     else if (gl.trend_description == "SingleDown" || gl.trend_description == "DoubleDown") arrow = ArrowS_bits;
-    arrow = ArrowE_bits;
+    else{arrow = ArrowE_bits;}
 
     GlucoseReadingString glchr = {bgChar, deltaFancy, timestr.c_str(), arrow};
     return glchr;
