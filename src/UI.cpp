@@ -10,6 +10,8 @@
 #include "dexcom/Dexcom_follow.h"
 #include <string>
 #include "images/arrows.h"
+#include "images/icons.h"
+#include "update_manager.h"
 
 using namespace std;
 
@@ -188,6 +190,13 @@ void UiGlucoseWarning(String warning){
 // Clear warning message above glucose.
 void UiGlucoseClearWarning(String warning){
     UiClearText(true, EPD_2in13_V4_HEIGHT/2, Font20.Height/2, warning.c_str(), &Font20);
+}
+
+void UiUpdateSymbol(){
+    Paint_DrawImage(UpdateIcon_bits, EPD_2in13_V4_WIDTH - 20, 1, 20, 20);
+}
+void UiClearUpdateSymbol(){
+    Paint_ClearWindows(1, 0, 21, 20, WHITE);
 }
 
 // Displays a warning message on screen with subtext.

@@ -23,6 +23,8 @@ void UiGlucoseStrikethrough();
 void UiGlucoseClearStrikethrough();
 void UiGlucoseWarning(String warning);
 void UiGlucoseClearWarning(String warning);
+void UiUpdateSymbol();
+void UiClearUpdateSymbol();
 void UiClearText(bool centered, int Xstart, int Ystart, const char * pString, sFONT* Font);
 void UiWarning(const char *message, const char *subtext);
 void UiTextQrCode(int startX, int startY, const char *link);
