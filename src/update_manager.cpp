@@ -4,7 +4,7 @@
 
 using namespace std;
 
-const char* repo = "sKribble45/Gluco-View";
+const char* repo = "sKribble45/GlucoView";
 
 RTC_DATA_ATTR bool updateNeeded = false;
 RTC_DATA_ATTR time_t lastCheckedForUpdates = 0;
