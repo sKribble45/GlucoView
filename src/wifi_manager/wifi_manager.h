@@ -17,5 +17,6 @@ typedef struct {
 WifiNetwork GetSavedNetwork(list<WifiNetwork> saved_networks);
 bool SavedNetworkExists(WifiNetwork network);
 bool ConnectToNetwork(String ssid, String password);
+int GetSignalStrength();
 
 #endif /* __WIFI_MANAGER_H */

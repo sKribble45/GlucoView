@@ -35,6 +35,8 @@ RTC_DATA_ATTR bool noWifiPrev = false;
 RTC_DATA_ATTR int dexErrors = 0;
 RTC_DATA_ATTR bool displayUpdateNeeded = false;
 
+int wifiSignalStrength = 0;
+
 // Sleep times.
 const int NO_TIME_SLEEP = 20;
 const int NO_DATA_SLEEP = 5*60;
@@ -52,7 +54,7 @@ UBYTE *Epaper_Image;
 void NoData(){
     if (noDataPrev){
         Serial.println("No Data!");
-        DisplayGlucose(prevGl, true, "No Data", displayUpdateNeeded);
+        DisplayGlucose(prevGl, true, "No Data", displayUpdateNeeded, wifiSignalStrength);
         Sleep(NO_DATA_SLEEP);
     }
     else{
@@ -83,7 +85,7 @@ GlucoseReading GetBG(Config config){
         
         // On failure to connect to the dexcom servers display no data.
         if (dexErrors == 1){
-            DisplayGlucose(prevGl, true, "Dexcom Error", displayUpdateNeeded);
+            DisplayGlucose(prevGl, true, "Dexcom Error", displayUpdateNeeded, wifiSignalStrength);
         }
         if (dexErrors < 3){dexErrors++;}
         // if there has been 3 consecutive dexcom errors tell the user that they may want to update their credentials.
@@ -142,7 +144,7 @@ void UpdateDisplay(Config config){
     WiFi.disconnect(true);
     WiFi.mode(WIFI_OFF);
 
-    DisplayGlucose(gl, false, "", displayUpdateNeeded);
+    DisplayGlucose(gl, false, "", displayUpdateNeeded, wifiSignalStrength);
     
 
     // SLEEP!
@@ -167,17 +169,22 @@ void OnStart(Config config) {
     if (ConnectToNetwork(wifiSsid, wifiPassword)){
         noWifiPrev = false;
         wifiTimoutPrev = false;
+        wifiSignalStrength = GetSignalStrength();
         UpdateDisplay(config);
     }
     else{
+        wifiSignalStrength = 0;
         //TODO: In the userconfig struct make the wifi credentials into a WifiNetwork struct
         WifiNetwork savedNetwork = {wifiSsid, wifiPassword};
         bool savedNetworkExists = SavedNetworkExists(savedNetwork);
         if (savedNetworkExists){
             Serial.println("A saved wifi network exists :)");
             if (wifiTimoutPrev){
-                DisplayGlucose(prevGl, true, "WiFi Timout", displayUpdateNeeded);
+                DisplayGlucose(prevGl, true, "WiFi Timout", displayUpdateNeeded, wifiSignalStrength);
                 Sleep(TIMOUT_WIFI_SLEEP);
+            }
+            else{
+                DisplayGlucose(prevGl, false, "", displayUpdateNeeded, wifiSignalStrength);
             }
             Serial.println("Failed to connect to wifi network (timed out) :(");
             wifiTimoutPrev = true;
@@ -185,7 +192,7 @@ void OnStart(Config config) {
         }
         else{
             if (noWifiPrev){
-                DisplayGlucose(prevGl, true, "No WiFi", displayUpdateNeeded);
+                DisplayGlucose(prevGl, true, "No WiFi", displayUpdateNeeded, wifiSignalStrength);
                 Sleep(NO_WIFI_SLEEP);
             }
             else{
@@ -271,16 +278,6 @@ void setup(){
 
     // Run the main start code
     OnStart(config);
-    // String wifiSsid = get<String>(config["wifi-ssid"]);
-    // String wifiPassword = get<String>(config["wifi-password"]);
-    // Serial.print("ssid: ");
-    // Serial.print(wifiSsid);
-    // Serial.print(" , password: ");
-    // Serial.println(wifiPassword);
-
-    // if (ConnectToNetwork(wifiSsid, wifiPassword)){
-    //     Serial.println(GetVersion());
-    // }
 }
 
 

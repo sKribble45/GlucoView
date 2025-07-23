@@ -3,41 +3,43 @@
 #include "dexcom/Dexcom_follow.h"
 
 RTC_DATA_ATTR int partialUpdates = 0;
-RTC_DATA_ATTR GlucoseScreen prevGlScreen;
+RTC_DATA_ATTR GlucoseScreen prevgs;
 
-void DrawGlucoseBuffer(GlucoseReading gl, bool glucoseStrikethrough, String warning, bool updateNeeded){
+void DrawGlucoseBuffer(GlucoseReading gl, bool glucoseStrikethrough, String warning, bool updateNeeded, int wifiSignalStrength){
     UiGlucose(gl);
     if(glucoseStrikethrough){UiGlucoseStrikethrough();}
     if(warning){UiGlucoseWarning(warning);}
-    if(updateNeeded){UiUpdateSymbol();}
+    if(updateNeeded){UiUpdateIcon();}
+    UiWiFiIcon(wifiSignalStrength);
 }
 void ClearGlucoseBuffer(GlucoseReading gl, bool glucoseStrikethrough, String warning, bool updateNeeded){
     UiClearGlucose(gl);
     if(glucoseStrikethrough){UiGlucoseClearStrikethrough();}
     if(warning){UiGlucoseClearWarning(warning);}
-    if(updateNeeded){UiClearUpdateSymbol();}
+    if(updateNeeded){UiClearUpdateIcon();}
+    UiClearWiFiIcon();
 }
 
-void DisplayGlucose(GlucoseReading gl, bool glucoseStrikethrough, String warning, bool updateNeeded){
+void DisplayGlucose(GlucoseReading gl, bool glucoseStrikethrough, String warning, bool updateNeeded, int wifiSignalStrength){
     if (uiLastScreen != GLUCOSE || partialUpdates >= 10){
         // Write the glucose screen to buffer.
-        DrawGlucoseBuffer(gl, glucoseStrikethrough, warning, updateNeeded);
+        DrawGlucoseBuffer(gl, glucoseStrikethrough, warning, updateNeeded, wifiSignalStrength);
         UiShow();
         partialUpdates = 0;
     }
     else{
         // write the previous screen to memory to tell the display it has already displayed it. (necccicary for partial update)
-        DrawGlucoseBuffer(prevGlScreen.gl, prevGlScreen.glucoseStrikethrough, prevGlScreen.warning, updateNeeded);
+        DrawGlucoseBuffer(prevgs.gl, prevgs.glucoseStrikethrough, prevgs.warning, prevgs.updateNeeded, prevgs.wifiSignalStrength);
         UiWriteToMem();
 
         // Clear the area where the glucose text was displayed to be overwriten.
-        ClearGlucoseBuffer(prevGlScreen.gl, prevGlScreen.glucoseStrikethrough, prevGlScreen.warning, updateNeeded);
+        ClearGlucoseBuffer(prevgs.gl, prevgs.glucoseStrikethrough, prevgs.warning, prevgs.updateNeeded);
         // Write the glucose screen to buffer.
-        DrawGlucoseBuffer(gl, glucoseStrikethrough, warning, updateNeeded);
+        DrawGlucoseBuffer(gl, glucoseStrikethrough, warning, updateNeeded, wifiSignalStrength);
         // Partial update the display, showing the image.
         UiShowPartial();
         // Increment a counter so that it full refreshes every 10 partial.
         partialUpdates ++;
     }
-    prevGlScreen = {gl, glucoseStrikethrough, warning};
+    prevgs = {gl, glucoseStrikethrough, warning, updateNeeded, wifiSignalStrength};
 }

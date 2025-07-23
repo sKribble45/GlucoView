@@ -11,7 +11,7 @@
 #include <string>
 #include "images/arrows.h"
 #include "images/icons.h"
-#include "update_manager.h"
+#include "update/update_manager.h"
 
 using namespace std;
 
@@ -192,11 +192,39 @@ void UiGlucoseClearWarning(String warning){
     UiClearText(true, EPD_2in13_V4_HEIGHT/2, Font20.Height/2, warning.c_str(), &Font20);
 }
 
-void UiUpdateSymbol(){
+void UiUpdateIcon(){
     Paint_DrawImage(UpdateIcon_bits, EPD_2in13_V4_WIDTH - 20, 1, 20, 20);
 }
-void UiClearUpdateSymbol(){
-    Paint_ClearWindows(1, 0, 21, 20, WHITE);
+void UiClearUpdateIcon(){
+    Paint_ClearWindows(1, 0, 20 + 1, 20, WHITE);
+}
+
+void UiWiFiIcon(int value){
+    const unsigned char* image;
+    switch (value)
+    {
+    case 0:
+        image = NoWifiIcon_bits;
+        break;
+    case 1:
+        image = WifiIcon1_bits;
+        break;
+    case 2:
+        image = WifiIcon2_bits;
+        break;
+    case 3:
+        image = WifiIcon3_bits;
+        break;
+    
+    default:
+        image = NoWifiIcon_bits;
+        break;
+    }
+    Paint_DrawImage(image, EPD_2in13_V4_WIDTH - 20, 220, 20, 20);
+}
+
+void UiClearWiFiIcon(){
+    Paint_ClearWindows(220, 0, 20 + 220, 20, WHITE);
 }
 
 // Displays a warning message on screen with subtext.

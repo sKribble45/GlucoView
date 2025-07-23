@@ -808,7 +808,7 @@ parameter:
     xEnd             ：Image width
     yEnd             : Image height
 ******************************************************************************/
-void Paint_DrawImage(const unsigned char *image_buffer, UWORD xStart, UWORD yStart, UWORD W_Image, UWORD H_Image) 
+void Paint_DrawImage(const unsigned char *image_buffer, UWORD yStart, UWORD xStart, UWORD W_Image, UWORD H_Image) 
 {
     UWORD x, y;
 	UWORD w_byte=(W_Image%8)?(W_Image/8)+1:W_Image/8;
@@ -817,7 +817,7 @@ void Paint_DrawImage(const unsigned char *image_buffer, UWORD xStart, UWORD ySta
     for (y = 0; y < H_Image; y++) {
         for (x = 0; x < w_byte; x++) {//8 pixel =  1 byte
             Addr = x + y * w_byte;
-			pAddr=x+(xStart/8)+((y+yStart)*Paint.WidthByte);
+			pAddr=x+(yStart/8)+((y+xStart)*Paint.WidthByte);
             Paint.Image[pAddr] = (unsigned char)image_buffer[Addr];
         }
     }

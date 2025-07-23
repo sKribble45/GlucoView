@@ -7,11 +7,13 @@ typedef struct{
     GlucoseReading gl;
     bool glucoseStrikethrough;
     String warning;
+    bool updateNeeded;
+    int wifiSignalStrength;
 } GlucoseScreen;
 
-void DisplayGlucose(GlucoseReading gl, bool glucoseStrikethrough, String warning, bool updateNeeded);
+void DisplayGlucose(GlucoseReading gl, bool glucoseStrikethrough, String warning, bool updateNeeded, int wifiSignalStrength);
 
 extern RTC_DATA_ATTR int partialUpdates;
-extern RTC_DATA_ATTR GlucoseScreen prevGlScreen;
+extern RTC_DATA_ATTR GlucoseScreen prevgs;
 
 #endif
