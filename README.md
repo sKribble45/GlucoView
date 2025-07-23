@@ -1,7 +1,7 @@
 # GlucoView
 A wall mounted E-paper display made for type one diabetics, used for checking blood sugar levels at a glance with ease.
 
-<img src="Images/MainScreen.jpg" alt="drawing" width="75%"/>
+<img src="Images/MainScreen.jpg" alt="GlucoView Device" width="75%"/>
 
 
 ## Features:
@@ -14,7 +14,7 @@ A wall mounted E-paper display made for type one diabetics, used for checking bl
 ## Configuration:
 It uses a web ui to configure the wifi and dexcom credentials aswell as other settings. It is accesed by pressing the pairing button on the side of the device and scanning 2 Qr codes (One for the access point and one for the web page).
 
-<img src="Images/WebUi.png" alt="drawing" width="50%"/>
+<img src="Images/WebUi.png" alt="Configuration Screen" width="50%"/>
 
 # Build Your Own
 
@@ -35,10 +35,23 @@ It uses a web ui to configure the wifi and dexcom credentials aswell as other se
 - Alen keys / Screwdriver with alen bits.
 - 3d printer or a service like [PCBway](https://www.pcbway.com/) or [jlcPCB](https://jlcpcb.com/)
 
+## Pinout:
+| Xiao ESP32 S3  | Device |
+| ------------- | ------------- |
+| D8 | EPD CLK |
+| D10 | EPD DIN |
+| D0 | EPD CS |
+| D3 | EPD RST |
+| D2 | EPD DC |
+| D4 | EPD BUSY |
+| D5 | BUTTON |
+
+## Wiring Diagram:
+<img src="Images/WiringDiagram.png" alt="Wiring Diagram"/>
+
 ### Guide comming soon :)
 
-
-# Credits:
+## Credits:
 - Font - [Dm Mono](https://fonts.google.com/specimen/DM+Mono)
 - Dexcom Follow Library by [Hynesman](https://github.com/Hynesman/Dexcom_Follow)
 - QR Code Libary by [Richard Moore](https://github.com/ricmoo/QRCode?tab=readme-ov-file)
