@@ -1,7 +1,6 @@
 #include <WiFi.h>
 #include <Arduino.h>
 #include "dexcom/Dexcom_follow.h"
-#include <NTPClient.h>
 #include <WiFiUdp.h>
 #include "epaper/DEV_Config.h"
 #include "epaper/EPD.h"
@@ -20,7 +19,9 @@
 #include "images/arrows.h"
 #include "glucose_screen.h"
 #include "github/github_api.h"
-#include "update_manager.h"
+#include "update/update_manager.h"
+#include "epoch_time.h"
+#include "sleep.h"
 using namespace std;
 
 esp_sleep_wakeup_cause_t wakeup_reason;
@@ -46,25 +47,7 @@ const int DEXCOM_ERROR_SLEEP = 1*60;
 
 UBYTE *Epaper_Image;
 
-WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP);
-
 #define BUTTON_PIN D5
-
-void Sleep(int sleep_seconds){
-    WiFi.disconnect(true);
-    WiFi.mode(WIFI_OFF);
-    Serial.print("Going to sleep for ");
-    Serial.print(sleep_seconds);
-    Serial.println("s *yawn*");
-    EPD_2in13_V4_Sleep(); // tell the screen to go to sleep "good night" *yawn*
-    esp_sleep_enable_timer_wakeup(sleep_seconds * 1000000); // tel the esp how long to sleep *big yawn*
-    esp_sleep_enable_ext0_wakeup((gpio_num_t)BUTTON_PIN, 1);
-    rtc_gpio_pullup_dis((gpio_num_t)BUTTON_PIN);
-    rtc_gpio_pulldown_en((gpio_num_t)BUTTON_PIN);
-    //esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF); // very sleep deep *strech*
-    esp_deep_sleep_start(); // COMENSE THE SLEEP!
-}
 
 void NoData(){
     if (noDataPrev){
@@ -78,40 +61,6 @@ void NoData(){
         Sleep(SHORT_NO_DATA_SLEEP);
     }
     
-}
-
-
-unsigned long GetEpoch(){
-    unsigned long currentTime;
-
-    const int forceUpdateLimit = 10;
-    int forceUpdates = 0;
-    timeClient.begin();
-    while(!timeClient.update() && forceUpdates <= forceUpdateLimit) {
-        // Try and force the timeclient update.
-        timeClient.forceUpdate();
-        Serial.println("Timeclient not updated, forcing update.");
-        forceUpdates ++;
-        delay(1000);
-    }
-    if (forceUpdates > forceUpdateLimit){
-        if (wakeupTime > 0){
-            Serial.println("Timeclient not updating, using old timestamp + the time it slept (less accurate)");
-            // calculate the previous wakeup time + the time it slept 
-            // This is less accurate because it could be doing things in between that take a few seconds
-            currentTime = wakeupTime;
-        }
-        else{
-            Serial.println("No previous time data.");
-            Sleep(NO_TIME_SLEEP);
-        }
-    }
-    else{
-        currentTime = timeClient.getEpochTime();
-    }
-
-
-    return currentTime;
 }
 
 void PrintGlucose(GlucoseReading gl){
@@ -173,6 +122,18 @@ void UpdateDisplay(Config config){
 
     // Get the current epoch time.
     unsigned long currentTime = GetEpoch();
+    if (currentTime == 0){
+        if (wakeupTime > 0){
+            Serial.println("Timeclient not updating, using old timestamp + the time it slept (less accurate)");
+            // calculate the previous wakeup time + the time it slept 
+            // This is less accurate because it could be doing things in between that take a few seconds
+            currentTime = wakeupTime;
+        }
+        else{
+            Serial.println("No previous time data.");
+            Sleep(NO_TIME_SLEEP);
+        }
+    }
 
     displayUpdateNeeded = CheckForUpdates();
     
@@ -192,7 +153,7 @@ void UpdateDisplay(Config config){
     wakeupTime = currentTime + sleepTime;
     if (sleepTime < 0 && sleepTime > -120){Sleep(10);}
     else if(sleepTime < 0){NoData();}
-    else {Sleep(sleepTime +2);} //TODO: add 2 to sleep time if its missing readings.
+    else {Sleep(sleepTime+2);} //TODO: add 2 to sleep time if its missing readings.
 }
 
 void OnStart(Config config) {
