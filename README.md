@@ -36,3 +36,9 @@ It uses a web ui to configure the wifi and dexcom credentials aswell as other se
 - 3d printer or a service like [PCBway](https://www.pcbway.com/) or [jlcPCB](https://jlcpcb.com/)
 
 ### Guide comming soon :)
+
+
+# Credits:
+- Font - [Dm Mono](https://fonts.google.com/specimen/DM+Mono)
+- Dexcom Follow Library by [Hynesman](https://github.com/Hynesman/Dexcom_Follow)
+- QR Code Libary by [Richard Moore](https://github.com/ricmoo/QRCode?tab=readme-ov-file)
