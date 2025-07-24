@@ -32,6 +32,8 @@ void UiWarning(const char *message, const char *subtext);
 void UiTextQrCode(int startX, int startY, const char *link);
 void UiWifiQrCode(int startX, int startY, String ssid, String password);
 void UiUpdateMode();
+void UiSetupScreen();
+void UiSetupFinish();
 void UiInitConfig(Config config);
 
 extern Config UiConfig;
@@ -42,7 +44,8 @@ typedef enum {
     GLUCOSE = 2,
     WARNING_GLUCOSE = 3,
     CONFIG = 4,
-    UPDATE = 5
+    UPDATE = 5,
+    SETUP = 6
 } UiScreen;
 
 extern RTC_DATA_ATTR UiScreen uiLastScreen;

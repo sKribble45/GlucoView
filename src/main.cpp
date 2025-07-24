@@ -208,14 +208,14 @@ void UpdateMode(){
     Serial.print("Started Update mode, Waiting for update");
     UiUpdateMode();
     UiShow();
-    while (digitalRead(BUTTON_PIN)){delay(100);}
+    while (digitalRead(BUTTON_PIN)){delay(50);}
     while (true) {
         if (digitalRead(BUTTON_PIN)){
             UiFullClear();
             UiWarning("Are you sure", "erasing the flash is perminent and will remove any configuration that is stored on the device. Press button to continue");
             UiShow();
-            while (digitalRead(BUTTON_PIN)){delay(100);}
-            while (!digitalRead(BUTTON_PIN)){delay(100);}
+            while (digitalRead(BUTTON_PIN)){delay(50);}
+            while (!digitalRead(BUTTON_PIN)){delay(50);}
             nvs_flash_erase(); // erase the NVS partition.
             nvs_flash_init(); // init the NVS partition.
             ESP.restart();
@@ -223,17 +223,11 @@ void UpdateMode(){
     };
 }
 
-string randomString(size_t length) {
-    const string characterSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/*+-=";
-    string result;
-    // Set random seed to the time.
-    // TODO: make this not time based.
-    srand(time(0));
-
-    for (size_t i = 0; i < length; ++i) {
-        result += characterSet[rand() % characterSet.size()];
-    }
-    return result;
+void StartConfiguration(Config &config){
+    string ApPassword = "glucoview_"+RandomString(5);
+    String ApSsid = "GlucoView" + GetSerialNumber();
+    HostConfigAP(config, ApSsid.c_str(), ApPassword.c_str());
+    SaveConfig(config);
 }
 
 void setup(){
@@ -261,14 +255,27 @@ void setup(){
     PrintConfigValues(config);
     // Load config to the ui.
     UiInitConfig(config);
-    // If it was woken up by the button press (or config dosnt exist) enter configuration mode.
-    if (!ConfigExists(config) || wakeup_reason == ESP_SLEEP_WAKEUP_EXT0){
-        Serial.println("Entering Configuration");
+
+    // Setup screen when you start the device for the first time.
+    if (!SerialNumberExists() || !ConfigExists(config)){
+        UiSetupScreen();
+        UiShow();
+        while (!digitalRead(BUTTON_PIN)){delay(50);}
+        RandomiseSerialNumber();
+        delay(50);
+        StartConfiguration(config);
         
-        string ApPassword = "glucoview_"+randomString(5);
-        string ApSsid = "GlucoView"+randomString(3);
-        HostConfigAP(config, ApSsid.c_str(), ApPassword.c_str());
-        SaveConfig(config);
+        UiFullClear();
+        UiSetupFinish();
+        UiShow();
+        while (!digitalRead(BUTTON_PIN)){delay(50);}
+        ESP.restart();
+    }
+
+    // If it was woken up by the button press (or config dosnt exist) enter configuration mode.
+    if (wakeup_reason == ESP_SLEEP_WAKEUP_EXT0){
+        Serial.println("Entering Configuration");
+        StartConfiguration(config);
         // Restart the device after configuration.
         ESP.restart();
     }

@@ -279,3 +279,14 @@ void UiUpdateMode(){
     Paint_DrawString_EN(false, 0, 15 + (Font24.Height / 2), "Use platformio to flash the new image to the device. Press button again to reset flash.", &Font12, WHITE, BLACK);
     uiLastScreen = UPDATE;
 }
+
+void UiSetupScreen(){
+    Paint_DrawString_EN(true, EPD_2in13_V4_HEIGHT / 2, 15, "Welcome!", &Font24, WHITE, BLACK);
+    Paint_DrawString_EN(false, 0, Font16.Height + Font24.Height + 5, "Press the configuration button on the left of the device to begin setup.", &Font16, WHITE, BLACK);
+    uiLastScreen = SETUP;
+}
+
+void UiSetupFinish(){
+    Paint_DrawString_EN(true, EPD_2in13_V4_HEIGHT / 2, 10, "Setup Finished!", &Font20, BLACK, WHITE);
+    Paint_DrawString_EN(false, 0, Font16.Height + Font20.Height + 5, "Press the button againto restart the device.", &Font16, WHITE, BLACK);
+}

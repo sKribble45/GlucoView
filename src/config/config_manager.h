@@ -19,5 +19,9 @@ void LoadConfig(Config &config);
 bool ConfigExists(Config config);
 void SaveConfig(Config config);
 void HostConfigAP(Config &config,String APssid, String APpassword);
+string RandomString(size_t length);
+String GetSerialNumber();
+bool SerialNumberExists();
+void RandomiseSerialNumber();
 
 #endif

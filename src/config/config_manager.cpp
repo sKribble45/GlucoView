@@ -12,7 +12,7 @@
 using namespace std;
 
 const char *PREFERENCES_KEY = "glucoview";
-
+const char *SERIAL_NUMBER_KEY = "serialnum";
 
 // Edit this when adding a new configuration value along with the html.
 Config CONFIG_TEMPLATE = {
@@ -260,4 +260,43 @@ void HostConfigAP(Config &config,String APssid, String APpassword){
     server.end();
     
     Serial.println("Configured :)");
+}
+
+string RandomString(size_t length) {
+    const string characterSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/*+-=";
+    string result;
+    // Set random seed to the time.
+    // TODO: make this not time based.
+    srand(time(0));
+
+    for (size_t i = 0; i < length; ++i) {
+        result += characterSet[rand() % characterSet.size()];
+    }
+    return result;
+}
+
+void RandomiseSerialNumber(){
+    Preferences prefs;
+    prefs.begin(SERIAL_NUMBER_KEY, false);
+    prefs.putString("serial-number", RandomString(4).c_str());
+    prefs.end();
+}
+
+bool SerialNumberExists(){
+    Preferences prefs;
+    prefs.begin(SERIAL_NUMBER_KEY, true);
+    if (prefs.getString("serial-number", "") != ""){
+        return true;
+    }
+    else{
+        return false;
+    }
+    prefs.end();
+}
+
+String GetSerialNumber(){
+    Preferences prefs;
+    prefs.begin(SERIAL_NUMBER_KEY, true);
+    String serialNumber = prefs.getString("serial-number", "");
+    return serialNumber;
 }
