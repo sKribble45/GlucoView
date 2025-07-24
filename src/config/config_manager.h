@@ -9,13 +9,6 @@ using namespace std;
 #ifndef __CONFIG_MANAGER_H
 #define __CONFIG_MANAGER_H
 
-typedef struct {
-    String wifiSsid;
-    String wifiPassword;
-    String dexcomUsername;
-    String dexcomPassword;
-    bool twelveHourTime;
-} UserConfig;
 
 typedef variant<int, double, String, bool> ConfigValue;
 

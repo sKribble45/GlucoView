@@ -92,6 +92,7 @@ bool ConfigExists(Config config){
 void SaveConfig(Config config){
     Preferences prefs;
     prefs.begin(PREFERENCES_KEY, false);
+    // prefs.clear();
     for (pair<string, ConfigValue> configEntry : config){
         if (holds_alternative<int>(configEntry.second)){
             prefs.putInt(configEntry.first.c_str(), get<int>(configEntry.second));
@@ -232,7 +233,7 @@ void HostConfigAP(Config &config,String APssid, String APpassword){
                                 PrintFinishedHtml(client);
                             }
                             else{
-                                PrintMainHtml(client);
+                                PrintMainHtml(client, config);
                             }
 
                             
@@ -258,5 +259,5 @@ void HostConfigAP(Config &config,String APssid, String APpassword){
     }
     server.end();
     
-    Serial.println("WiFi configured :)");
+    Serial.println("Configured :)");
 }

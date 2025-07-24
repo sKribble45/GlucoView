@@ -236,13 +236,6 @@ string randomString(size_t length) {
     return result;
 }
 
-void StartConfig(){
-    Config config;
-    string ApPassword = "glucoview_"+randomString(5);
-    HostConfigAP(config, "GlucoView", ApPassword.c_str());
-    SaveConfig(config);
-}
-
 void setup(){
     Serial.begin(115200);
     // Get the reason it was woken from sleep.
@@ -261,7 +254,7 @@ void setup(){
     //!! DO NOT REMOVE CODE BEFORE THIS MESSAGE UNLESS YOU KNOW WHAT YOU ARE DOING (you may need to take appart the device to bootstrap so that you can re-program if you do)
 
     // Delay to connect to serial port.
-    // delay(2000);
+    delay(2000);
 
     Config config;
     LoadConfig(config);
@@ -271,7 +264,11 @@ void setup(){
     // If it was woken up by the button press (or config dosnt exist) enter configuration mode.
     if (!ConfigExists(config) || wakeup_reason == ESP_SLEEP_WAKEUP_EXT0){
         Serial.println("Entering Configuration");
-        StartConfig();
+        
+        string ApPassword = "glucoview_"+randomString(5);
+        string ApSsid = "GlucoView"+randomString(3);
+        HostConfigAP(config, ApSsid.c_str(), ApPassword.c_str());
+        SaveConfig(config);
         // Restart the device after configuration.
         ESP.restart();
     }

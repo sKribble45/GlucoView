@@ -1,6 +1,13 @@
 #include <WiFi.h>
+#include "config/config_manager.h"
 
-void PrintMainHtml(WiFiClient &client){
+String CheckboxValue(bool value){
+    if (value) {return "checked";}
+    else {return "";}
+}
+
+void PrintMainHtml(WiFiClient &client, Config config){
+
     client.println("<!DOCTYPE html>");
     client.println("<html lang=\"en\">");
     client.println("<head>");
@@ -68,21 +75,21 @@ void PrintMainHtml(WiFiClient &client){
     client.println("<body>");
     client.println("  <div class=\"container\">");
     client.println("    <h2>Configure GlucoView</h2>");
-    client.println("    <form>");
+    client.println("    <form id=\"coolForm\">");
     client.println("      <label for=\"ssid\" class=\"blocklabel\">WiFi SSID</label>");
-    client.println("      <input type=\"text\" id=\"ssid\" name=\"wifi-ssid\" required>");
+    client.println("      <input type=\"text\" id=\"ssid\" name=\"wifi-ssid\" value=\""+get<String>(config["wifi-ssid"])+"\" required>");
     client.println("");
     client.println("      <label for=\"wifiPassword\" class=\"blocklabel\">WiFi Password</label>");
-    client.println("      <input type=\"password\" id=\"wifiPassword\" name=\"wifi-password\" required>");
+    client.println("      <input type=\"password\" id=\"wifiPassword\" name=\"wifi-password\" value=\""+get<String>(config["wifi-password"])+"\" required>");
     client.println("");
     client.println("      <label for=\"dexcomUser\" class=\"blocklabel\">Dexcom Username</label>");
-    client.println("      <input type=\"text\" id=\"dexcomUser\" name=\"dex-username\" required>");
+    client.println("      <input type=\"text\" id=\"dexcomUser\" name=\"dex-username\" value=\""+get<String>(config["dex-username"])+"\" required>");
     client.println("");
     client.println("      <label for=\"dexcomPass\" class=\"blocklabel\">Dexcom Password</label>");
-    client.println("      <input type=\"password\" id=\"dexcomPass\" name=\"dex-password\" required>");
+    client.println("      <input type=\"password\" id=\"dexcomPass\" name=\"dex-password\" value=\""+get<String>(config["dex-password"])+"\" required>");
     client.println("");
     client.println("      <label class=\"blocklabel\">12H Reading timestamp:</label>");
-    client.println("      <input type=\"checkbox\" id=\"twelveHourTime\" name=\"12h-time\">");
+    client.println("      <input type=\"checkbox\" name=\"12h-time\" id=\"twelveHourTime\" value=\"on\" "+CheckboxValue(get<bool>(config["12h-time"]))+">");
     client.println("      <label id=\"twelveHourTimeExample\">Example: 20:55</label>");
     client.println("");
     client.println("      <button type=\"submit\">Save Configuration</button>");
@@ -100,6 +107,24 @@ void PrintMainHtml(WiFiClient &client){
     client.println("  }");
     client.println("  updateTwelveHourTimeExample();");
     client.println("  twelveHourTimeCheckbox.onchange = updateTwelveHourTimeExample;");
+    client.println("");
+    client.println("");
+    client.println("  document.getElementById(\"coolForm\").addEventListener(\"submit\", function() {");
+    client.println("    const checkboxes = document.querySelectorAll(\"input[type='checkbox']\");");
+    client.println("");
+    client.println("    checkboxes.forEach(function(checkbox) {");
+    client.println("        const hiddenInput = document.querySelector(`input[name='${checkbox.name}'][type='hidden']`);");
+    client.println("");
+    client.println("        // If checkbox is unchecked and hidden input doesn't exist, create it");
+    client.println("        if (!checkbox.checked && !hiddenInput) {");
+    client.println("            const hidden = document.createElement(\"input\");");
+    client.println("            hidden.type = \"hidden\";");
+    client.println("            hidden.name = checkbox.name;");
+    client.println("            hidden.value = \"off\";");
+    client.println("            document.getElementById(\"coolForm\").appendChild(hidden);");
+    client.println("        }");
+    client.println("    });");
+    client.println("});");
     client.println("</script>");
 }
 
