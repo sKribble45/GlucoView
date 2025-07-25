@@ -20,7 +20,11 @@ Config CONFIG_TEMPLATE = {
     {"wifi-password", ""},
     {"dex-username", ""},
     {"dex-password", ""},
-    {"12h-time", false}
+    {"12h-time", false},
+    {"trend-arrow", true},
+    {"delta", true},
+    {"timestamp", true},
+    {"update-check", true},
 };
 
 void PrintConfigValues(Config config){
@@ -261,6 +265,36 @@ void HostConfigAP(Config &config,String APssid, String APpassword){
     
     Serial.println("Configured :)");
 }
+
+String getStringValue(string key, Config config){
+    ConfigValue configValue = config[key];
+    if (holds_alternative<String>(configValue)){
+        return get<String>(configValue);
+    }
+    else{return "";}
+}
+int getIntValue(string key, Config config){
+    ConfigValue configValue = config[key];
+    if (holds_alternative<int>(configValue)){
+        return get<int>(configValue);
+    }
+    else{return 0;}
+}
+double getDoubleValue(string key, Config config){
+    ConfigValue configValue = config[key];
+    if (holds_alternative<double>(configValue)){
+        return get<double>(configValue);
+    }
+    else{return 0.0;}
+}
+bool getBooleanValue(string key, Config config){
+    ConfigValue configValue = config[key];
+    if (holds_alternative<bool>(configValue)){
+        return get<bool>(configValue);
+    }
+    else{return false;}
+}
+
 
 string RandomString(size_t length) {
     const string characterSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/*+-=";

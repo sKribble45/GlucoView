@@ -159,8 +159,8 @@ void UpdateDisplay(Config config){
 }
 
 void OnStart(Config config) {
-    String wifiSsid = get<String>(config["wifi-ssid"]);
-    String wifiPassword = get<String>(config["wifi-password"]);
+    String wifiSsid = getStringValue("wifi-ssid", config);
+    String wifiPassword = getStringValue("wifi-ssid", config);
     Serial.print("ssid: ");
     Serial.print(wifiSsid);
     Serial.print(" , password: ");
@@ -174,7 +174,6 @@ void OnStart(Config config) {
     }
     else{
         wifiSignalStrength = 0;
-        //TODO: In the userconfig struct make the wifi credentials into a WifiNetwork struct
         WifiNetwork savedNetwork = {wifiSsid, wifiPassword};
         bool savedNetworkExists = SavedNetworkExists(savedNetwork);
         if (savedNetworkExists){
@@ -230,6 +229,15 @@ void StartConfiguration(Config &config){
     SaveConfig(config);
 }
 
+void ConfigurationFinish(){
+    UiFullClear();
+    UiSetupFinish();
+    UiShow();
+    while (!digitalRead(BUTTON_PIN)){delay(50);}
+    while (digitalRead(BUTTON_PIN)){delay(50);}
+    ESP.restart();
+}
+
 void setup(){
     Serial.begin(115200);
     // Get the reason it was woken from sleep.
@@ -248,7 +256,7 @@ void setup(){
     //!! DO NOT REMOVE CODE BEFORE THIS MESSAGE UNLESS YOU KNOW WHAT YOU ARE DOING (you may need to take appart the device to bootstrap so that you can re-program if you do)
 
     // Delay to connect to serial port.
-    delay(2000);
+    // delay(2000);
 
     Config config;
     LoadConfig(config);
@@ -264,12 +272,7 @@ void setup(){
         RandomiseSerialNumber();
         delay(50);
         StartConfiguration(config);
-        
-        UiFullClear();
-        UiSetupFinish();
-        UiShow();
-        while (!digitalRead(BUTTON_PIN)){delay(50);}
-        ESP.restart();
+        ConfigurationFinish();
     }
 
     // If it was woken up by the button press (or config dosnt exist) enter configuration mode.

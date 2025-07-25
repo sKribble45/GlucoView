@@ -24,4 +24,9 @@ String GetSerialNumber();
 bool SerialNumberExists();
 void RandomiseSerialNumber();
 
+String getStringValue(string value, Config config);
+int getIntValue(string value, Config config);
+double getDoubleValue(string value, Config config);
+bool getBooleanValue(string value, Config config);
+
 #endif

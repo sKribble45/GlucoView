@@ -86,7 +86,7 @@ struct GlucoseReadingString{
 static GlucoseReadingString GetGLChar(GlucoseReading gl, Config config){
     // Config config;
     // LoadConfig(config);
-    bool twelveHourTime = get<bool>(config["12h-time"]);
+    bool twelveHourTime = getBooleanValue("12h-time", config);
     // Get UTC time from the epoch
     time_t epochTime = gl.tztimestamp;
     struct tm *utc = gmtime(&epochTime);
@@ -143,34 +143,55 @@ static GlucoseReadingString GetGLChar(GlucoseReading gl, Config config){
 // Draw Glucose screen (includes glucose level, delta and timestamp)
 void UiGlucose(GlucoseReading gl){
     GlucoseReadingString glstr = GetGLChar(gl, UiConfig);
+    bool arrowEnabled = getBooleanValue("trend-arrow", UiConfig);
     int glucoseOffset = 0;
-    if (glstr.bg.length() == 3){glucoseOffset = (EPD_2in13_V4_HEIGHT-((Font80.Width*3)+60))/2;}
+    if (glstr.bg.length() == 3){
+        if (arrowEnabled){glucoseOffset = (EPD_2in13_V4_HEIGHT-((Font80.Width*3)+60))/2;}
+        else{glucoseOffset = (EPD_2in13_V4_HEIGHT-(Font80.Width*3))/2;}
+    }
     // Draw bg
     Paint_DrawString_EN(false, 0+glucoseOffset, (EPD_2in13_V4_WIDTH / 2) - (Font80.Height/2), glstr.bg.c_str(), &Font80, BLACK, WHITE);
     // Draw Delta
-    Paint_DrawString_EN(true, 215, 105, glstr.delta.c_str(), &Font20, BLACK, WHITE);
+    if (getBooleanValue("delta", UiConfig)){
+        Paint_DrawString_EN(true, 215, 105, glstr.delta.c_str(), &Font20, BLACK, WHITE);
+    }
     // Draw timestamp
-    Paint_DrawString_EN(true, ((glstr.bg.length()*Font80.Width)/2)+glucoseOffset, 105, glstr.time.c_str(), &Font20, BLACK, WHITE);
+    if (getBooleanValue("timestamp", UiConfig)){
+        Paint_DrawString_EN(true, ((glstr.bg.length()*Font80.Width)/2)+glucoseOffset, 105, glstr.time.c_str(), &Font20, BLACK, WHITE);
+    }
     // Draw arrow
-    Paint_DrawImage(glstr.arrow, 33, 192-(Font80.Width * (glstr.bg.length()-4)*-1)+glucoseOffset, 60, 60);
-
+    if (arrowEnabled){
+        Paint_DrawImage(glstr.arrow, 33, 192-(Font80.Width * (glstr.bg.length()-4)*-1)+glucoseOffset, 60, 60);
+    }
     uiLastScreen = GLUCOSE;
 }
+
 // Clear Glucose screen (includes glucose level, delta and timestamp) ready for partial update.
 void UiClearGlucose(GlucoseReading gl){
     GlucoseReadingString glstr = GetGLChar(gl, UiConfig);
+    bool arrowEnabled = getBooleanValue("trend-arrow", UiConfig);
     int glucoseOffset = 0;
-    if (glstr.bg.length() == 3){glucoseOffset = (EPD_2in13_V4_HEIGHT-((Font80.Width*3)+60))/2;}
+    if (glstr.bg.length() == 3){
+        if (arrowEnabled){glucoseOffset = (EPD_2in13_V4_HEIGHT-((Font80.Width*3)+60))/2;}
+        else{glucoseOffset = (EPD_2in13_V4_HEIGHT-(Font80.Width*3))/2;}
+    }
     // Draw bg
     UiClearText(false, 0+glucoseOffset, (EPD_2in13_V4_WIDTH / 2) - (Font80.Height/2), glstr.bg.c_str(), &Font80);
     // Draw Delta
-    UiClearText(true, 215, 105, glstr.delta.c_str(), &Font20);
+    if (getBooleanValue("delta", UiConfig)){
+        UiClearText(true, 215, 105, glstr.delta.c_str(), &Font20);
+    }
     // Draw timestamp
-    UiClearText(true, ((glstr.bg.length()*Font80.Width)/2)+glucoseOffset, 105, glstr.time.c_str(), &Font20);
+    if (getBooleanValue("timestamp", UiConfig)){
+        UiClearText(true, ((glstr.bg.length()*Font80.Width)/2)+glucoseOffset, 105, glstr.time.c_str(), &Font20);
+    }
     // Draw arrow
-    int arrowXPos = (192-(Font80.Width * (glstr.bg.length()-4)*-1)) + glucoseOffset;
-    int arrowYPos = 33;
-    Paint_ClearWindows(arrowXPos, arrowYPos, arrowXPos + 60, arrowYPos + 60, WHITE);
+    if (arrowEnabled){
+        int arrowXPos = (192-(Font80.Width * (glstr.bg.length()-4)*-1)) + glucoseOffset;
+        int arrowYPos = 33;
+        Paint_ClearWindows(arrowXPos, arrowYPos, arrowXPos + 60, arrowYPos + 60, WHITE);
+    }
+    uiLastScreen = GLUCOSE;
 }
 
 // Line through the glucose text.
