@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GlucoView</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f7fa;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 50%;
+      max-height: 75%;
+      margin: auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    label{
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+
+    .blocklabel {
+      display: block;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.25rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 2rem;
+      padding: 0.75rem;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Configure GlucoView</h2>
+    <form id="coolForm">
+      <label for="ssid" class="blocklabel">WiFi SSID</label>
+      <input type="text" id="ssid" name="wifi-ssid" required>
+
+      <label for="wifiPassword" class="blocklabel">WiFi Password</label>
+      <input type="password" id="wifiPassword" name="wifi-password" required>
+
+      <label for="dexcomUser" class="blocklabel">Dexcom Username</label>
+      <input type="text" id="dexcomUser" name="dex-username" required>
+
+      <label for="dexcomPass" class="blocklabel">Dexcom Password</label>
+      <input type="password" id="dexcomPass" name="dex-password" required>
+
+      <label class="blocklabel">12H Reading timestamp:</label>
+      <input type="checkbox" name="12h-time" id="twelveHourTime" value="on">
+      <label id="twelveHourTimeExample">Example: 20:55</label>
+      
+      <label class="blocklabel">Display trend arrow:</label>
+      <input type="checkbox" name="trend-arrow" value="on">
+
+      <label class="blocklabel">Display delta:</label>
+      <input type="checkbox" name="delta" value="on">
+
+      <label class="blocklabel">Display reading timestamp:</label>
+      <input type="checkbox" name="timestamp" value="on">
+
+      <label class="blocklabel">Check for updates:</label>
+      <input type="checkbox" name="update-check" value="on">
+
+
+      <button type="submit">Save Configuration</button>
+    </form>
+  </div>
+</body>
+</html>
+<script>
+  var twelveHourTimeCheckbox = document.getElementById("twelveHourTime");
+  var twelveHourTimeExampleLabel = document.getElementById("twelveHourTimeExample");
+
+  function updateTwelveHourTimeExample(){
+    if (twelveHourTimeCheckbox.checked){twelveHourTimeExampleLabel.textContent = "Example: 9:55 PM";}
+    else {twelveHourTimeExampleLabel.textContent = "Example: 20:55";}
+  }
+  updateTwelveHourTimeExample();
+  twelveHourTimeCheckbox.onchange = updateTwelveHourTimeExample;
+
+
+  document.getElementById("coolForm").addEventListener("submit", function() {
+    const checkboxes = document.querySelectorAll("input[type='checkbox']");
+    
+    checkboxes.forEach(function(checkbox) {
+        const hiddenInput = document.querySelector(`input[name='${checkbox.name}'][type='hidden']`);
+        
+        // If checkbox is unchecked and hidden input doesn't exist, create it
+        if (!checkbox.checked && !hiddenInput) {
+            const hidden = document.createElement("input");
+            hidden.type = "hidden";
+            hidden.name = checkbox.name;
+            hidden.value = "off";
+            document.getElementById("coolForm").appendChild(hidden);
+        }
+    });
+});
+</script>
