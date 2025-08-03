@@ -1,4 +1,4 @@
-### MIT License
+MIT License
 
 Copyright (c) 2025 sKribble45
 
@@ -20,8 +20,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-### Font Attribution
+Font Attribution
 
-This project includes a custom font based on DM Mono, originally designed by [Colophon Foundry](https://fonts.google.com/?query=Colophon%20Foundry) and released under the SIL Open Font License 1.1.
+This project includes a custom font based on DM Mono, originally designed by Colophon Foundry and released under the SIL Open Font License 1.1.
 
 The modified font has been renamed to "GlucoviewMono" to comply with the license.
