@@ -256,7 +256,7 @@ void setup(){
     //!! DO NOT REMOVE CODE BEFORE THIS MESSAGE UNLESS YOU KNOW WHAT YOU ARE DOING (you may need to take appart the device to bootstrap so that you can re-program if you do)
 
     // Delay to connect to serial port.
-    delay(2000);
+    // delay(2000);
 
     Config config;
     LoadConfig(config);
