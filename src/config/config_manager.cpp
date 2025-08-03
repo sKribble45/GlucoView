@@ -216,7 +216,10 @@ void HostConfigAP(Config &config,String APssid, String APpassword){
                                             config[queryEntry.first] = stoi(queryEntry.second);
                                         }
                                         if (holds_alternative<String>(CONFIG_TEMPLATE[queryEntry.first])){
-                                            config[queryEntry.first] = queryEntry.second.c_str(); // convert to a char string to conver to String from std::string
+                                            String queryStringValue = queryEntry.second.c_str();
+                                            if (queryStringValue != MaskPassword(get<String>(config[queryEntry.first]))){
+                                                config[queryEntry.first] = queryStringValue; // convert to a char string to conver to String from std::string
+                                            }
                                         }
                                         if (holds_alternative<double>(CONFIG_TEMPLATE[queryEntry.first])){
                                             config[queryEntry.first] = stod(queryEntry.second);

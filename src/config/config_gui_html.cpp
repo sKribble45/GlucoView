@@ -1,9 +1,19 @@
 #include <WiFi.h>
 #include "config/config_manager.h"
 
+using namespace std;
+
 String CheckboxValue(bool value){
     if (value) {return "checked";}
     else {return "";}
+}
+
+String MaskPassword(String password){
+    string output;
+    for (char c : password){
+        output += "*";
+    }
+    return output.c_str();
 }
 
 void PrintMainHtml(WiFiClient &client, Config config){
@@ -80,13 +90,13 @@ void PrintMainHtml(WiFiClient &client, Config config){
     client.println("      <input type=\"text\" id=\"ssid\" name=\"wifi-ssid\" value=\""+getStringValue("wifi-ssid", config)+"\" required>");
     client.println("");
     client.println("      <label for=\"wifiPassword\" class=\"blocklabel\">WiFi Password</label>");
-    client.println("      <input type=\"password\" id=\"wifiPassword\" name=\"wifi-password\" value=\""+getStringValue("wifi-password", config)+"\" required>");
+    client.println("      <input type=\"password\" id=\"wifiPassword\" name=\"wifi-password\" value=\""+MaskPassword(getStringValue("wifi-password", config))+"\" required>");
     client.println("");
     client.println("      <label for=\"dexcomUser\" class=\"blocklabel\">Dexcom Username</label>");
     client.println("      <input type=\"text\" id=\"dexcomUser\" name=\"dex-username\" value=\""+getStringValue("dex-username", config)+"\" required>");
     client.println("");
     client.println("      <label for=\"dexcomPass\" class=\"blocklabel\">Dexcom Password</label>");
-    client.println("      <input type=\"password\" id=\"dexcomPass\" name=\"dex-password\" value=\""+getStringValue("dex-password", config)+"\" required>");
+    client.println("      <input type=\"password\" id=\"dexcomPass\" name=\"dex-password\" value=\""+MaskPassword(getStringValue("dex-password", config))+"\" required>");
     client.println("");
     client.println("      <label class=\"blocklabel\">12H Reading timestamp:</label>");
     client.println("      <input type=\"checkbox\" name=\"12h-time\" id=\"twelveHourTime\" value=\"on\" "+CheckboxValue(getBooleanValue("12h-time", config))+">");
