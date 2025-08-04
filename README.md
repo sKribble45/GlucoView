@@ -1,8 +1,9 @@
 # GlucoView
-A wall mounted E-paper display made for type one diabetics, used for checking blood sugar levels at a glance with ease.
+A wall mounted E-paper display made for type one diabetics, used for checking blood sugar levels at a glance.
 
 <img src="Images/MainScreen.jpg" alt="GlucoView Device" width="75%"/>
 
+### <b style="color:red">WARNING: I am not a medical profesional, do not use this device for treatment decisions. Use ar your own risk.</b>
 
 ## Features:
 - Uses a web UI and QR codes to make it simple and easy to configure using a smart device.
