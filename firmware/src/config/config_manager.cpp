@@ -303,8 +303,7 @@ string RandomString(size_t length) {
     const string characterSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/*+-=";
     string result;
     // Set random seed to the time.
-    // TODO: make this not time based.
-    srand(time(0));
+    srand(esp_random() + length);
 
     for (size_t i = 0; i < length; ++i) {
         result += characterSet[rand() % characterSet.size()];

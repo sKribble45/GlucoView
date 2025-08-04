@@ -227,9 +227,7 @@ void StartConfiguration(Config &config){
     String ApSsid = "GlucoView" + GetSerialNumber();
     HostConfigAP(config, ApSsid.c_str(), ApPassword.c_str());
     SaveConfig(config);
-}
 
-void ConfigurationFinish(){
     UiFullClear();
     UiSetupFinish();
     UiShow();
@@ -262,7 +260,9 @@ void setup(){
 
     Config config;
     LoadConfig(config);
-    PrintConfigValues(config);
+    #if DEBUG
+        PrintConfigValues(config);
+    #endif
     // Load config to the ui.
     UiInitConfig(config);
 
@@ -274,7 +274,6 @@ void setup(){
         RandomiseSerialNumber();
         delay(50);
         StartConfiguration(config);
-        ConfigurationFinish();
     }
 
     // If it was woken up by the button press (or config dosnt exist) enter configuration mode.
