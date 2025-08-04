@@ -12,6 +12,14 @@ A wall mounted E-paper display made for type one diabetics, used for checking bl
 - Uses an epaper screen and deep sleep which allows it to be extremely low power.
 - Uses partial updates on the screen so glucose updates display extremely quick.
 
+## Future plans
+- Nightscout compatibility.
+- Dexcom out of us setting.
+- mg/dl option instead of mmol/l.
+- List wifi networks rather than enter ssid manualy.
+- Graph option for the ui.
+
+
 ## Configuration:
 It uses a web ui to configure the wifi and dexcom credentials aswell as other settings. It is accesed by pressing the pairing button on the side of the device and scanning 2 Qr codes (One for the access point and one for the web page).
 
