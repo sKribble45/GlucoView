@@ -4,7 +4,6 @@
 #include "config_gui_html.h"
 #include <Preferences.h>
 #include "wifi_manager/wifi_manager.h"
-#include "dexcom/dexcom_account.h"
 #include "UI.h"
 #include <vector>
 #include <sstream>

@@ -12,7 +12,6 @@
 #include <list>
 #include <unordered_map>
 #include <Preferences.h>
-#include "dexcom/dexcom_account.h"
 #include "driver/rtc_io.h"
 #include "time.h"
 #include <nvs_flash.h>
