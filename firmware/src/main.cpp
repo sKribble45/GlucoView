@@ -160,11 +160,13 @@ void UpdateDisplay(Config config){
 
 void OnStart(Config config) {
     String wifiSsid = getStringValue("wifi-ssid", config);
-    String wifiPassword = getStringValue("wifi-ssid", config);
-    Serial.print("ssid: ");
-    Serial.print(wifiSsid);
-    Serial.print(" , password: ");
-    Serial.println(wifiPassword);
+    String wifiPassword = getStringValue("wifi-password", config);
+    #if DEBUG
+        Serial.print("ssid: ");
+        Serial.print(wifiSsid);
+        Serial.print(" , password: ");
+        Serial.println(wifiPassword);
+    #endif
 
     if (ConnectToNetwork(wifiSsid, wifiPassword)){
         noWifiPrev = false;
