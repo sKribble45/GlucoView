@@ -1,7 +1,7 @@
 # GlucoView
 A wall mounted E-paper display made for type one diabetics, used for checking blood sugar levels at a glance.
 
-<img src="Images/MainScreen.jpg" alt="GlucoView Device" width="75%"/>
+<img src="Images/CadView.png" alt="Configuration Screen"/>
 
 ### <b style="color:red">WARNING: I am not a medical profesional, do not use this device for treatment decisions. Use ar your own risk.</b>
 
@@ -26,6 +26,14 @@ It uses a web ui to configure the wifi and dexcom credentials aswell as other se
 <img src="Images/WebUi.png" alt="Configuration Screen" width="50%"/>
 
 # Build Your Own
+
+## Cad Models:
+[![Build Status](https://cad.onshape.com/images/logo-onshape-gray-green.svg)](https://cad.onshape.com/documents/657beeeeb3e29ae5b1578280/w/7df4418e981bbd9b2a29f8d4/e/0c90e781795b9ee73095e2fe?renderMode=0&uiState=68920b79e27d084874f56432)
+
+[Stl Files](./Models)
+
+<img src="Images/ExplodedCadView.png" alt="Configuration Screen"/>
+
 
 ## Parts:
 - Esp32 S3 microcontroler from [Seeed Studio](https://www.seeedstudio.com/Seeed-Studio-XIAO-ESP32S3-Plus-p-6361.html) (Specificialy the Seed Studio XIAO ESP32-S3 Plus)
