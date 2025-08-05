@@ -60,7 +60,14 @@ It uses a web ui to configure the wifi and dexcom credentials aswell as other se
 
 ### Guide comming soon :)
 
+## Font License
+
+This project uses a modified version of the DM Mono font, originally by Colophon Foundry.
+
+The font has been renamed and modified to comply with the [SIL Open Font License 1.1](https://scripts.sil.org/OFL).  
+See [FONT_LICENSES](./FONT_LICENSE.md) for full details.
+
+
 ## Credits:
-- Font - [Dm Mono](https://fonts.google.com/specimen/DM+Mono)
 - Dexcom Follow Library by [Hynesman](https://github.com/Hynesman/Dexcom_Follow)
 - QR Code Libary by [Richard Moore](https://github.com/ricmoo/QRCode?tab=readme-ov-file)
