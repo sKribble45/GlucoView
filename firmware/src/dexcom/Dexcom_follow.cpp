@@ -170,7 +170,9 @@ bool Follower::GlucoseLevelsNow()
                 http.end();
                 return false;
             }
-
+            #if DEBUG
+                Serial.println(response);
+            #endif
             // Extract the blood glucose value
             // GlucoseNow.mg_dl = doc[0]["Value"];
             GlucoseNow.bg = convertToMmol(doc[0]["Value"]);
