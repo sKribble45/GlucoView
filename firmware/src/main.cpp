@@ -129,7 +129,9 @@ void UpdateDisplay(Config config){
         }
     }
 
-    displayUpdateNeeded = CheckForUpdates();
+    if (getBooleanValue("update-check", config)){
+        displayUpdateNeeded = CheckForUpdates();
+    }
     
 
     // no longer need wifi so turn it off to save some power.
