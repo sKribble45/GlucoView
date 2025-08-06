@@ -123,9 +123,9 @@ static GlucoseReadingString GetGLChar(GlucoseReading gl, Config config){
     sprintf(bgChar, "%.1f", gl.bg);
 
     // Add a plus to the delta if it is positive.
-    char deltaFancy[5];
-    if (gl.delta >= 0.0){ sprintf(deltaFancy, "+%.1f", gl.delta); }
-    else{ sprintf(deltaFancy, "%.1f", gl.delta); }
+    char deltaString[5];
+    if (gl.delta >= 0.0){ sprintf(deltaString, "+%.1f", gl.delta); }
+    else{ sprintf(deltaString, "%.1f", gl.delta); }
     
 
     const unsigned char* arrow;
@@ -136,7 +136,7 @@ static GlucoseReadingString GetGLChar(GlucoseReading gl, Config config){
     else if (gl.trend_description == "SingleDown" || gl.trend_description == "DoubleDown") arrow = ArrowS_bits;
     else{arrow = ArrowE_bits;}
 
-    GlucoseReadingString glchr = {bgChar, deltaFancy, timestr.c_str(), arrow};
+    GlucoseReadingString glchr = {bgChar, deltaString, timestr.c_str(), arrow};
     return glchr;
 }
 

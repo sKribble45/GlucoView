@@ -152,7 +152,7 @@ bool Follower::GlucoseLevelsNow()
 
         String url = DexcomServer + "/Publisher/ReadPublisherLatestGlucoseValues?sessionId=";
         url += SessionID;
-        url += "&minutes=1440&maxCount=1";
+        url += "&minutes=1440&maxCount=2";
 
         http.begin(url);
 
@@ -176,6 +176,12 @@ bool Follower::GlucoseLevelsNow()
             // Extract the blood glucose value
             // GlucoseNow.mg_dl = doc[0]["Value"];
             GlucoseNow.bg = convertToMmol(doc[0]["Value"]);
+            if (!doc[1].isNull()){
+                GlucoseNow.delta = convertToMmol(doc[0]["Value"]) - convertToMmol(doc[1]["Value"]);
+            }
+            else{
+                GlucoseNow.delta = 0.0;
+            }
 
             GlucoseNow.trend_description = doc[0]["Trend"].as<const char *>();
             GlucoseNow.trend_Symbol = getTrendSymbol(GlucoseNow.trend_description);

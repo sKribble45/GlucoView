@@ -100,15 +100,9 @@ GlucoseReading GetBG(Config config){
     // if the reading hasnt changed yet call the no data function.
     if (gl.timestamp == prevGl.timestamp){NoData();}
     else{noDataPrev = false;}
-    // work out delta or if it is the first reading set delta to 0.0
-    if (prevGl.bg != 0.0){ gl.delta = gl.bg - prevGl.bg; }
-    else{ gl.delta = 0.0; }
-
 
     return gl;
 }
-
-
 
 void UpdateDisplay(Config config){
     // Get the blood glucose reading from dexcom.
