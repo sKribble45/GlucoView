@@ -22,6 +22,7 @@ string RandomString(size_t length);
 String GetSerialNumber();
 bool SerialNumberExists();
 void RandomiseSerialNumber();
+void ResetSettings();
 
 String getStringValue(string value, Config config);
 int getIntValue(string value, Config config);

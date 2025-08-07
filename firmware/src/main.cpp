@@ -10,7 +10,6 @@
 #include <nvs_flash.h>
 #include "images/arrows.h"
 #include "glucose_screen.h"
-#include "github/github_api.h"
 #include "update/update_manager.h"
 #include "epoch_time.h"
 #include "sleep.h"
@@ -196,19 +195,11 @@ void UpdateMode(){
     Serial.print("Started Update mode, Waiting for update");
     UiUpdateMode();
     UiShow();
-    while (digitalRead(BUTTON_PIN)){delay(50);}
-    while (true) {
-        if (digitalRead(BUTTON_PIN)){
-            UiFullClear();
-            UiWarning("Are you sure", "erasing the flash is perminent and will remove any configuration that is stored on the device. Press button to continue");
-            UiShow();
-            while (digitalRead(BUTTON_PIN)){delay(50);}
-            while (!digitalRead(BUTTON_PIN)){delay(50);}
-            nvs_flash_erase(); // erase the NVS partition.
-            nvs_flash_init(); // init the NVS partition.
-            ESP.restart();
-        }
-    };
+    while (digitalRead(BUTTON_PIN)){delay(20);}
+    while (!digitalRead(BUTTON_PIN)){delay(20);}
+    while (digitalRead(BUTTON_PIN)){delay(20);}
+    ResetSettings();
+    ESP.restart();
 }
 
 void StartConfiguration(Config &config){

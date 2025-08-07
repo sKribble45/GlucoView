@@ -335,3 +335,7 @@ String GetSerialNumber(){
     String serialNumber = prefs.getString("serial-number", "");
     return serialNumber;
 }
+
+void ResetSettings(){
+    SaveConfig(CONFIG_TEMPLATE);
+}

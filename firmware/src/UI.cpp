@@ -297,7 +297,7 @@ void UiWebPageConectionPage(String pageLink){
 
 void UiUpdateMode(){
     Paint_DrawString_EN(true, EPD_2in13_V4_HEIGHT / 2, 15, "Update Mode", &Font24, WHITE, BLACK);
-    Paint_DrawString_EN(false, 0, 15 + (Font24.Height / 2), "Use platformio to flash the new image to the device. Press button again to reset flash.", &Font12, WHITE, BLACK);
+    Paint_DrawString_EN(false, 0, 15 + (Font24.Height / 2), "Use platformio to flash the new image to the device or press the button to reset settings.", &Font12, WHITE, BLACK);
     uiLastScreen = UPDATE;
 }
 

@@ -1,7 +1,15 @@
-#include "github/github_api.h"
 #include "ArduinoJson.h"
 #include "update_manager.h"
 #include <vector>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <Update.h>
+#include <iostream>
+#include <sstream>
+#include <string>
+
 using namespace std;
 
 const char* repo = "sKribble45/GlucoView";
@@ -9,34 +17,56 @@ const char* repo = "sKribble45/GlucoView";
 RTC_DATA_ATTR bool updateNeeded = false;
 RTC_DATA_ATTR time_t lastCheckedForUpdates = 0;
 
-vector<String> SplitString(String str, char split){
-    int targetIndex = 0;
-    vector<String> output;
-    for (char chr : str){
-        if (chr != split){
-            output[targetIndex] += chr;
+bool GetReleases(JsonDocument &json, String repo){
+    HTTPClient httpClient;
+
+    httpClient.begin("https://api.github.com/repos/"+repo+"/releases");
+
+    int httpCode = httpClient.GET();
+
+    if (httpCode > 0 && httpCode == HTTP_CODE_OK){
+        String response = httpClient.getString();
+        DeserializationError error = deserializeJson(json, response);
+        if (error){
+            Serial.print("Error parsing JSON response: ");
+            Serial.println(error.c_str());
+            httpClient.end();
+            return false;
         }
-        else{targetIndex ++;}
+        return true;
     }
-    return output;
+    else{return false;}
 }
 
 // Get version from github (defults to 0.0.0)
 Version GetVersion(){
     JsonDocument json;
     if (GetReleases(json, repo)){
-        String versionNameUnfiltered = json[0]["name"].as<const char*>();
+        String versionNameUnfiltered = json[0]["tag_name"].as<const char*>();
         String versionName;        
         for (char chr : versionNameUnfiltered){
             if (chr != 'V' && chr != 'v'){
                 versionName += chr;
             }
         }
-        vector<String> versionStrList = SplitString(versionName, '.');
+
         Version version;
-        version.major = stoi(versionStrList[0].c_str());
-        version.minor = stoi(versionStrList[1].c_str());
-        version.revision = stoi(versionStrList[2].c_str());
+
+        stringstream ss(versionName.c_str());
+        string segment;
+        // Extract major
+        if (getline(ss, segment, '.')) {
+            version.major = std::stoi(segment);
+        }
+        // Extract minor
+        if (getline(ss, segment, '.')) {
+            version.minor = std::stoi(segment);
+        }
+        // Extract revision
+        if (getline(ss, segment, '.')) {
+            version.revision = std::stoi(segment);
+        }
+        
         return version;
     }
     else{
@@ -56,4 +86,3 @@ bool CheckForUpdates(){
     }
     return updateNeeded;
 }
-
