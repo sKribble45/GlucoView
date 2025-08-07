@@ -134,7 +134,6 @@ void UpdateDisplay(Config config){
 
     DisplayGlucose(gl, false, "", displayUpdateNeeded, wifiSignalStrength);
     
-
     // SLEEP!
     // work out the time it has to sleep for the next reading.
     int sleepTime = (5 * 60) - (currentTime - gl.timestamp);
