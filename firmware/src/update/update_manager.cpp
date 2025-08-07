@@ -18,6 +18,7 @@ vector<String> SplitString(String str, char split){
         }
         else{targetIndex ++;}
     }
+    return output;
 }
 
 // Get version from github (defults to 0.0.0)
