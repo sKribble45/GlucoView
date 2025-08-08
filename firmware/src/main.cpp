@@ -165,7 +165,7 @@ void UpdateDisplay(Config config){
     wakeupTime = currentTime + sleepTime;
     if (sleepTime < 0 && sleepTime > -120){Sleep(10);}
     else if(sleepTime < 0){NoData();}
-    else {Sleep(sleepTime+4);} //TODO: add 2 to sleep time if its missing readings.
+    else {Sleep(sleepTime+5);} //TODO: add 2 to sleep time if its missing readings.
 }
 
 void OnStart(Config config) {

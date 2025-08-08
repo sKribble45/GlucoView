@@ -127,13 +127,12 @@ static GlucoseReadingString GetGLChar(GlucoseReading gl, Config config){
     if (gl.delta >= 0.0){ sprintf(deltaString, "+%.1f", gl.delta); }
     else{ sprintf(deltaString, "%.1f", gl.delta); }
     
-
     const unsigned char* arrow;
-    if (gl.trend_description == "DoubleUp" || gl.trend_description == "SingleUp") arrow = ArrowN_bits;
-    else if (gl.trend_description == "FortyFiveUp") arrow = ArrowNE_bits;
-    else if (gl.trend_description == "Flat") arrow = ArrowE_bits;
-    else if (gl.trend_description == "FortyFiveDown") arrow = ArrowSE_bits;
-    else if (gl.trend_description == "SingleDown" || gl.trend_description == "DoubleDown") arrow = ArrowS_bits;
+    if (gl.trend_Symbol == "^" || gl.trend_Symbol == "^^") arrow = ArrowN_bits;
+    else if (gl.trend_Symbol == "/^") arrow = ArrowNE_bits;
+    else if (gl.trend_Symbol == "->") arrow = ArrowE_bits;
+    else if (gl.trend_Symbol == "\\v") arrow = ArrowSE_bits;
+    else if (gl.trend_Symbol == "v" || gl.trend_Symbol == "vv") arrow = ArrowS_bits;
     else{arrow = ArrowE_bits;}
 
     GlucoseReadingString glchr = {bgChar, deltaString, timestr.c_str(), arrow};
