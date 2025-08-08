@@ -296,7 +296,9 @@ void UiWebPageConectionPage(String pageLink){
 
 void UiUpdateMode(){
     Paint_DrawString_EN(true, EPD_2in13_V4_HEIGHT / 2, 15, "Update Mode", &Font24, WHITE, BLACK);
-    Paint_DrawString_EN(false, 0, 15 + (Font24.Height / 2), "Press the button on the side of the device to update from github or use platformio to flash from usb.", &Font12, WHITE, BLACK);
+    string versionString = "Version: V" + to_string(VERSION_MAJOR) + "." + to_string(VERSION_MINOR) + "." + to_string(VERSION_REVISION);
+    Paint_DrawString_EN(true, EPD_2in13_V4_HEIGHT / 2, 22+ (Font24.Height / 2), versionString.c_str(), &Font16, WHITE, BLACK);
+    Paint_DrawString_EN(false, 0, 15 + (Font24.Height / 2) + (Font16.Height), "Press the button on the side of the device to update from github or use platformio to flash from usb.", &Font12, WHITE, BLACK);
     uiLastScreen = UPDATE;
 }
 
@@ -309,4 +311,5 @@ void UiSetupScreen(){
 void UiSetupFinish(){
     Paint_DrawString_EN(true, EPD_2in13_V4_HEIGHT / 2, 10, "Setup Finished!", &Font20, BLACK, WHITE);
     Paint_DrawString_EN(false, 0, Font16.Height + Font20.Height + 5, "Press the button againto restart the device.", &Font16, WHITE, BLACK);
+    uiLastScreen = SETUP;
 }
