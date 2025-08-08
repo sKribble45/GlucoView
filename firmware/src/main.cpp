@@ -106,7 +106,7 @@ GlucoseReading GetBG(Config config){
 void UpdateDisplay(Config config){
     // Get the blood glucose reading from dexcom.
     GlucoseReading gl = GetBG(config);
-
+    prevGl = gl;
     // Get the current epoch time.
     unsigned long currentTime = GetEpoch();
     if (currentTime == 0){
@@ -123,7 +123,7 @@ void UpdateDisplay(Config config){
     }
 
     if (getBooleanValue("update-check", config)){
-        displayUpdateNeeded = CheckForUpdates();
+        displayUpdateNeeded = CheckForUpdate();
     }
     
 
@@ -141,7 +141,7 @@ void UpdateDisplay(Config config){
     wakeupTime = currentTime + sleepTime;
     if (sleepTime < 0 && sleepTime > -120){Sleep(10);}
     else if(sleepTime < 0){NoData();}
-    else {Sleep(sleepTime+2);} //TODO: add 2 to sleep time if its missing readings.
+    else {Sleep(sleepTime+4);} //TODO: add 2 to sleep time if its missing readings.
 }
 
 void OnStart(Config config) {
@@ -191,15 +191,75 @@ void OnStart(Config config) {
     }
 }
 
-void UpdateMode(){
-    Serial.print("Started Update mode, Waiting for update");
-    UiUpdateMode();
-    UiShow();
-    while (digitalRead(BUTTON_PIN)){delay(20);}
+void WaitForButtonPress(){
+    if (digitalRead(BUTTON_PIN)){
+        while (digitalRead(BUTTON_PIN)){delay(20);}
+    }
     while (!digitalRead(BUTTON_PIN)){delay(20);}
     while (digitalRead(BUTTON_PIN)){delay(20);}
-    ResetSettings();
+}
+
+void UpdateMode(){
+    Serial.print("Started Update mode, Waiting for update");
+    UiFullClear();
+    UiUpdateMode();
+    UiShow();
+
+    WaitForButtonPress();
+
+    UiFullClear();
+    UiWarning("Updating...", "Checking for updates...");
+    UiShow();
+
+    Config config;
+    LoadConfig(config);
+
+    String wifiSsid = getStringValue("wifi-ssid", config);
+    String wifiPassword = getStringValue("wifi-password", config);
+    #if DEBUG
+        Serial.print("ssid: ");
+        Serial.print(wifiSsid);
+        Serial.print(" , password: ");
+        Serial.println(wifiPassword);
+    #endif
+
+    if (ConnectToNetwork(wifiSsid, wifiPassword)){
+        if (CheckForUpdate()){
+            String URL = GetFirmwareUrl();
+            if (URL != ""){
+                UiFullClear();
+                UiWarning("Updating...", "Downloading update... Do not unplug the device.");
+                UiShow();
+                if (UpdateFromUrl(URL)){
+                    UiFullClear();
+                    UiWarning("Update Sucess", "Restarting...");
+                    UiShow();
+                    ESP.restart();
+                }
+                else{
+                    UiFullClear();
+                    UiWarning("Update Failed", "HTTP Request failed.");
+                    UiShow();
+                }
+                
+            }
+        }
+        else{
+            Serial.println("No update found.");
+            UiFullClear();
+            UiWarning("Update Failed", "No update found.");
+            UiShow();
+        }
+    }
+    else{
+        Serial.println("Couldent connect to wifi, update failed.");
+        UiFullClear();
+        UiWarning("Update Failed", "Couldent connect to wifi network.");
+        UiShow();
+    }
+    WaitForButtonPress();
     ESP.restart();
+
 }
 
 void StartConfiguration(Config &config){

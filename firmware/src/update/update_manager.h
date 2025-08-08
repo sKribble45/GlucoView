@@ -1,7 +1,9 @@
 #ifndef __UPDATE_MANAGER_H
 #define __UPDATE_MANAGER_H
 
-bool CheckForUpdates();
+bool CheckForUpdate();
+bool UpdateFromUrl(String url);
+String GetFirmwareUrl();
 extern RTC_DATA_ATTR bool updateNeeded;
 extern RTC_DATA_ATTR time_t lastCheckedForUpdates;
 

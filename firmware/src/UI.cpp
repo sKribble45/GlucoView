@@ -251,7 +251,7 @@ void UiClearWiFiIcon(){
 // Displays a warning message on screen with subtext.
 void UiWarning(const char *message, const char *subtext){
     Paint_DrawString_EN(true, EPD_2in13_V4_HEIGHT / 2, EPD_2in13_V4_WIDTH / 2, message, &Font24, WHITE, BLACK);
-    Paint_DrawString_EN(false, 10, (EPD_2in13_V4_WIDTH / 2) + Font24.Height, subtext, &Font8, WHITE, BLACK);
+    Paint_DrawString_EN(true, EPD_2in13_V4_HEIGHT / 2, (EPD_2in13_V4_WIDTH / 2) + Font24.Height, subtext, &Font8, WHITE, BLACK);
     uiLastScreen = WARNING; 
 }
 
@@ -297,7 +297,7 @@ void UiWebPageConectionPage(String pageLink){
 
 void UiUpdateMode(){
     Paint_DrawString_EN(true, EPD_2in13_V4_HEIGHT / 2, 15, "Update Mode", &Font24, WHITE, BLACK);
-    Paint_DrawString_EN(false, 0, 15 + (Font24.Height / 2), "Use platformio to flash the new image to the device or press the button to reset settings.", &Font12, WHITE, BLACK);
+    Paint_DrawString_EN(false, 0, 15 + (Font24.Height / 2), "Press the button on the side of the device to update from github or use platformio to flash from usb.", &Font12, WHITE, BLACK);
     uiLastScreen = UPDATE;
 }
 

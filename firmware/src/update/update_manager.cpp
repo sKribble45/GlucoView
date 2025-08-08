@@ -9,6 +9,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <Update.h>
 
 using namespace std;
 
@@ -66,7 +67,7 @@ Version GetVersion(){
         if (getline(ss, segment, '.')) {
             version.revision = std::stoi(segment);
         }
-        
+
         return version;
     }
     else{
@@ -75,7 +76,7 @@ Version GetVersion(){
     
 }
 
-bool CheckForUpdates(){
+bool CheckForUpdate(){
     time_t t = time(0);
     if (t - lastCheckedForUpdates > 30*60 || lastCheckedForUpdates == 0){
         Version latestVersion = GetVersion();
@@ -85,4 +86,62 @@ bool CheckForUpdates(){
         }
     }
     return updateNeeded;
+}
+
+String GetFirmwareUrl(){
+    String URL = "";
+    JsonDocument json;
+    if (GetReleases(json, repo)){
+        for (JsonObject asset : json[0]["assets"].as<JsonArray>()){
+            if (asset["name"] == FIRMWARE_FILE_NAME){
+                URL = String(asset["browser_download_url"]);
+            }
+        }
+    }
+    return URL;
+}
+
+bool UpdateFromUrl(String url){
+    WiFiClientSecure client;
+    client.setInsecure(); //TODO: Make more secure.
+    HTTPClient http;
+    http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+    Serial.println("Starting OTA update...");
+
+    http.begin(client, url);
+    int httpCode = http.GET();
+    if (httpCode == HTTP_CODE_OK) {
+        int contentLength = http.getSize();
+        Serial.println(contentLength);
+        bool canBegin = Update.begin(contentLength);
+
+        if (canBegin) {
+            WiFiClient* stream = http.getStreamPtr();
+            size_t written = Update.writeStream(*stream);
+
+            if (written == contentLength) {
+                Serial.println("Written : " + String(written) + " successfully");
+            } else {
+                Serial.println("Written only : " + String(written) + "/" + String(contentLength) + ". Retry?");
+            }
+
+            if (Update.end()) {
+                if (Update.isFinished()) {
+                    Serial.println("Update successfully completed.");
+                    return true;
+                } else {
+                    Serial.println("Update not finished? Something went wrong.");
+                }
+            } else {
+                Serial.println("Error Occurred. Error #: " + String(Update.getError()));
+            }
+        } else {
+            Serial.println("Not enough space to begin OTA");
+        }
+    } else {
+        Serial.println("Cannot download firmware. HTTP error code: " + String(httpCode));
+    }
+
+    http.end();
+    return false;
 }
