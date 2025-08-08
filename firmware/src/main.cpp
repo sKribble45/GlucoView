@@ -42,6 +42,27 @@ UBYTE *Epaper_Image;
 
 #define BUTTON_PIN D5
 
+void Update(){
+    String URL = GetFirmwareUrl();
+    if (URL != ""){
+        UiFullClear();
+        UiWarning("Updating...", "Downloading update... Do not unplug the device.");
+        UiShow();
+        if (UpdateFromUrl(URL)){
+            UiFullClear();
+            UiWarning("Update Sucess", "Restarting...");
+            UiShow();
+            ESP.restart();
+        }
+        else{
+            UiFullClear();
+            UiWarning("Update Failed", "HTTP Request failed.");
+            UiShow();
+        }
+        
+    }
+}
+
 void NoData(){
     if (noDataPrev){
         Serial.println("No Data!");
@@ -200,27 +221,6 @@ void WaitForButtonPress(){
     }
     while (!digitalRead(BUTTON_PIN)){delay(20);}
     while (digitalRead(BUTTON_PIN)){delay(20);}
-}
-
-void Update(){
-    String URL = GetFirmwareUrl();
-    if (URL != ""){
-        UiFullClear();
-        UiWarning("Updating...", "Downloading update... Do not unplug the device.");
-        UiShow();
-        if (UpdateFromUrl(URL)){
-            UiFullClear();
-            UiWarning("Update Sucess", "Restarting...");
-            UiShow();
-            ESP.restart();
-        }
-        else{
-            UiFullClear();
-            UiWarning("Update Failed", "HTTP Request failed.");
-            UiShow();
-        }
-        
-    }
 }
 
 void UpdateMode(){
