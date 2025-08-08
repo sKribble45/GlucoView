@@ -124,6 +124,9 @@ void UpdateDisplay(Config config){
 
     if (getBooleanValue("update-check", config)){
         displayUpdateNeeded = CheckForUpdate();
+        if (getBooleanValue("auto-update", config) && displayUpdateNeeded){
+            Update();
+        }
     }
     
 
@@ -199,6 +202,27 @@ void WaitForButtonPress(){
     while (digitalRead(BUTTON_PIN)){delay(20);}
 }
 
+void Update(){
+    String URL = GetFirmwareUrl();
+    if (URL != ""){
+        UiFullClear();
+        UiWarning("Updating...", "Downloading update... Do not unplug the device.");
+        UiShow();
+        if (UpdateFromUrl(URL)){
+            UiFullClear();
+            UiWarning("Update Sucess", "Restarting...");
+            UiShow();
+            ESP.restart();
+        }
+        else{
+            UiFullClear();
+            UiWarning("Update Failed", "HTTP Request failed.");
+            UiShow();
+        }
+        
+    }
+}
+
 void UpdateMode(){
     Serial.print("Started Update mode, Waiting for update");
     UiFullClear();
@@ -208,7 +232,7 @@ void UpdateMode(){
     WaitForButtonPress();
 
     UiFullClear();
-    UiWarning("Updating...", "Checking for updates...");
+    UiWarning("Updating...", "Connecting to WiFi...");
     UiShow();
 
     Config config;
@@ -224,25 +248,11 @@ void UpdateMode(){
     #endif
 
     if (ConnectToNetwork(wifiSsid, wifiPassword)){
+        UiFullClear();
+        UiWarning("Updating...", "Checking for updates...");
+        UiShow();
         if (CheckForUpdate()){
-            String URL = GetFirmwareUrl();
-            if (URL != ""){
-                UiFullClear();
-                UiWarning("Updating...", "Downloading update... Do not unplug the device.");
-                UiShow();
-                if (UpdateFromUrl(URL)){
-                    UiFullClear();
-                    UiWarning("Update Sucess", "Restarting...");
-                    UiShow();
-                    ESP.restart();
-                }
-                else{
-                    UiFullClear();
-                    UiWarning("Update Failed", "HTTP Request failed.");
-                    UiShow();
-                }
-                
-            }
+            Update();
         }
         else{
             Serial.println("No update found.");
