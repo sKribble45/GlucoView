@@ -1,9 +1,12 @@
 # GlucoView
-A wall mounted E-paper display made for type one diabetics, used for checking blood sugar levels at a glance.
+<img src="Images/Logo.png" alt="Configuration Screen" width="50%"/>
 
-<img src="Images/CadView.png" alt="Configuration Screen"/>
+GlucoView is a low power, wall mounted E-paper display made for type one diabetics, used for checking blood sugar levels at a glance.
 
 ### <b style="color:red">WARNING: I am not a medical profesional, do not use this device for treatment decisions. Use ar your own risk.</b>
+
+<img src="Images/CadView.png" alt="Configuration Screen" width = "75%"/>
+
 
 ## Features:
 - Uses a web UI and QR codes to make it simple and easy to configure using a smart device.
@@ -11,13 +14,16 @@ A wall mounted E-paper display made for type one diabetics, used for checking bl
 - Displays delta of glucose level on screen to make it easier to judge the rate of change.
 - Uses an epaper screen and deep sleep which allows it to be extremely low power.
 - Uses partial updates on the screen so glucose updates display extremely quick.
+- Has OTA (Over the air) updates so you never have to manualy update.
 
 ## Future plans
 - Nightscout compatibility.
 - Dexcom out of us setting.
 - mg/dl option instead of mmol/l.
 - List wifi networks rather than enter ssid manualy.
-- Graph option for the ui.
+- Multiple Ui options including a graph.
+- Battery powered version.
+- Custom PCB.
 
 
 ## Configuration:
