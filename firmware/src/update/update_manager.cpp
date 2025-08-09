@@ -10,6 +10,7 @@
 #include <sstream>
 #include <string>
 #include <Update.h>
+#include "config/config_manager.h"
 
 using namespace std;
 
@@ -17,6 +18,13 @@ const char* repo = "sKribble45/GlucoView";
 
 RTC_DATA_ATTR bool updateNeeded = false;
 RTC_DATA_ATTR time_t lastCheckedForUpdates = 0;
+
+Config updateConfig;
+
+// Initilise update configuration.
+void UpdateInitConfig(Config config){
+    updateConfig = config;
+}
 
 bool GetReleases(JsonDocument &json, String repo){
     HTTPClient httpClient;
@@ -39,39 +47,71 @@ bool GetReleases(JsonDocument &json, String repo){
     else{return false;}
 }
 
-// Get version from github (defults to 0.0.0)
+Version ParseStringVersion(String versionString){
+    String versionName;
+    for (char chr : versionString){
+        if (chr != 'V' && chr != 'v'){
+            versionName += chr;
+        }
+    }
+
+    Version version;
+
+    stringstream ss(versionName.c_str());
+    string segment;
+    // Extract major
+    if (getline(ss, segment, '.')) {
+        version.major = stoi(segment);
+    }
+    // Extract minor
+    if (getline(ss, segment, '.')) {
+        version.minor = stoi(segment);
+    }
+    // Extract revision
+    if (getline(ss, segment, '.')) {
+        size_t dashPos = segment.find('-');
+        if (dashPos != string::npos) {
+            // Split revision and build
+            version.revision = stoi(segment.substr(0, dashPos));
+            version.build = stoi(segment.substr(dashPos + 1));
+        } else {
+            version.revision = stoi(segment);
+        }
+    }
+
+    return version;
+}
+
+JsonObject GetLatestRelease(JsonDocument &json){
+    JsonObject latestRelease = json[0];
+    Version latestVesion = ParseStringVersion(json[0]["tag_name"]);
+    if (getBooleanValue("beta", updateConfig)){
+        for (JsonObject release : json.as<JsonArray>()){
+            Version releaseVersion = ParseStringVersion(release["tag_name"].as<const char*>());
+            if (release["prerelease"].as<bool>() 
+            && latestVesion.major <= releaseVersion.major 
+            && latestVesion.minor <= releaseVersion.minor 
+            && latestVesion.revision <= releaseVersion.revision){
+                latestRelease = release;
+                break;
+            }
+        }
+    }
+    return latestRelease;
+}
+
+
+
+// Get version from github (defults to 0.0.0-0)
 Version GetVersion(){
     JsonDocument json;
     if (GetReleases(json, repo)){
-        String versionNameUnfiltered = json[0]["tag_name"].as<const char*>();
-        String versionName;        
-        for (char chr : versionNameUnfiltered){
-            if (chr != 'V' && chr != 'v'){
-                versionName += chr;
-            }
-        }
-
-        Version version;
-
-        stringstream ss(versionName.c_str());
-        string segment;
-        // Extract major
-        if (getline(ss, segment, '.')) {
-            version.major = std::stoi(segment);
-        }
-        // Extract minor
-        if (getline(ss, segment, '.')) {
-            version.minor = std::stoi(segment);
-        }
-        // Extract revision
-        if (getline(ss, segment, '.')) {
-            version.revision = std::stoi(segment);
-        }
-
-        return version;
+        JsonObject latestRelease = GetLatestRelease(json);
+        String versionNameUnfiltered = latestRelease["tag_name"].as<const char*>();
+        return ParseStringVersion(versionNameUnfiltered);
     }
     else{
-        return {0,0,0};
+        return {0,0,0,0};
     }
     
 }
@@ -81,7 +121,13 @@ bool CheckForUpdate(){
     if (t - lastCheckedForUpdates > 30*60 || lastCheckedForUpdates == 0){
         Version latestVersion = GetVersion();
         if (latestVersion.major != 0){
-            updateNeeded = (latestVersion.major > VERSION_MAJOR || latestVersion.minor > VERSION_MINOR || latestVersion.revision > VERSION_REVISION);
+            if (getBooleanValue("beta", updateConfig)){
+                updateNeeded = (latestVersion.major > VERSION_MAJOR || latestVersion.minor > VERSION_MINOR || latestVersion.revision > VERSION_REVISION || latestVersion.build > VERSION_BUILD);
+            }
+            else{
+                updateNeeded = (latestVersion.major > VERSION_MAJOR || latestVersion.minor > VERSION_MINOR || latestVersion.revision > VERSION_REVISION);
+            }
+            
             lastCheckedForUpdates = t;
         }
     }
@@ -92,7 +138,8 @@ String GetFirmwareUrl(){
     String URL = "";
     JsonDocument json;
     if (GetReleases(json, repo)){
-        for (JsonObject asset : json[0]["assets"].as<JsonArray>()){
+        JsonObject latestRelease = GetLatestRelease(json);
+        for (JsonObject asset : latestRelease["assets"].as<JsonArray>()){
             if (asset["name"] == FIRMWARE_FILE_NAME){
                 URL = String(asset["browser_download_url"]);
             }

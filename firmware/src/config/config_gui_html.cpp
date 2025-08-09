@@ -117,6 +117,9 @@ void PrintMainHtml(WiFiClient &client, Config config){
     client.println("      <label class=\"blocklabel\">Auto update:</label>");
     client.println("      <input type=\"checkbox\" name=\"auto-update\" value=\"on\" "+CheckboxValue(getBooleanValue("auto-update", config))+" >");
     client.println("");
+    client.println("      <label class=\"blocklabel\">Beta channel (EXPEREMENTAL):</label>");
+    client.println("      <input type=\"checkbox\" name=\"beta\" value=\"on\" "+CheckboxValue(getBooleanValue("beta", config))+" >");
+    client.println("");
     client.println("      <button type=\"submit\">Save Configuration</button>");
     client.println("    </form>");
     client.println("  </div>");

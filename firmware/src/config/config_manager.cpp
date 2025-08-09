@@ -24,7 +24,8 @@ Config CONFIG_TEMPLATE = {
     {"delta", true},
     {"timestamp", true},
     {"update-check", true},
-    {"auto-update", true}
+    {"auto-update", true},
+    {"beta", false}
 };
 
 void PrintConfigValues(Config config){

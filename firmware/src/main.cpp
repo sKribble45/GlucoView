@@ -237,6 +237,8 @@ void UpdateMode(){
 
     Config config;
     LoadConfig(config);
+    UpdateInitConfig(config);
+    UiInitConfig(config);
 
     String wifiSsid = getStringValue("wifi-ssid", config);
     String wifiPassword = getStringValue("wifi-password", config);
@@ -313,8 +315,9 @@ void setup(){
     #if DEBUG
         PrintConfigValues(config);
     #endif
-    // Load config to the ui.
+    // Load config to other components.
     UiInitConfig(config);
+    UpdateInitConfig(config);
 
     // Setup screen when you start the device for the first time.
     if (!SerialNumberExists() || !ConfigExists(config)){
