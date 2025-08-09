@@ -76,6 +76,7 @@ Version ParseStringVersion(String versionString){
             version.build = stoi(segment.substr(dashPos + 1));
         } else {
             version.revision = stoi(segment);
+            version.build = 0;
         }
     }
 
@@ -92,6 +93,7 @@ JsonObject GetLatestRelease(JsonDocument &json){
             && latestVesion.major <= releaseVersion.major 
             && latestVesion.minor <= releaseVersion.minor 
             && latestVesion.revision <= releaseVersion.revision){
+                Serial.println("Beta release found");
                 latestRelease = release;
                 break;
             }
@@ -122,6 +124,7 @@ bool CheckForUpdate(){
         Version latestVersion = GetVersion();
         if (latestVersion.major != 0){
             if (getBooleanValue("beta", updateConfig)){
+                Serial.println(latestVersion.build);
                 updateNeeded = (latestVersion.major > VERSION_MAJOR || latestVersion.minor > VERSION_MINOR || latestVersion.revision > VERSION_REVISION || latestVersion.build > VERSION_BUILD);
             }
             else{
