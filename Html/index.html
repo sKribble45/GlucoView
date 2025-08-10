@@ -1,136 +1,373 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GlucoView</title>
-  <style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Configure GlucoView</title>
+<style>
+    :root {
+        --bg-light: #f3f4f6;
+        --bg-dark: #111827;
+        --card-light: #ffffff;
+        --card-dark: #1f2937;
+        --text-light: #1f2937;
+        --text-dark: #f9fafb;
+        --border-light: #d1d5db;
+        --border-dark: #374151;
+        --primary-light: #2563eb;
+        --primary-dark: #3b82f6;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f5f7fa;
-      padding: 2rem;
+        font-family: sans-serif;
+        background: var(--bg-light);
+        color: var(--text-light);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 1rem;
+        transition: background 0.3s, color 0.3s;
     }
 
-    .container {
-      max-width: 50%;
-      max-height: 75%;
-      margin: auto;
-      background: white;
-      padding: 2rem;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    body.dark {
+        background: var(--bg-dark);
+        color: var(--text-dark);
     }
 
-    h2 {
-      text-align: center;
-      margin-bottom: 1.5rem;
+    .form-card {
+        background: var(--card-light);
+        padding: 1.5rem;
+        border-radius: 1rem;
+        max-width: 500px;
+        width: 100%;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        transition: background 0.3s;
+        position: relative;
     }
 
-    label{
-      margin-top: 1rem;
-      font-weight: bold;
+    body.dark .form-card {
+        background: var(--card-dark);
     }
 
-    .blocklabel {
-      display: block;
+    h1 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
     }
 
-    input[type="text"],
-    input[type="password"] {
-      width: 100%;
-      padding: 0.5rem;
-      margin-top: 0.25rem;
-      border: 1px solid #ccc;
-      border-radius: 5px;
+    .section {
+        margin-bottom: 1rem;
+        border: 1px solid var(--border-light);
+        border-radius: 0.5rem;
+        overflow: hidden;
+        transition: border-color 0.3s;
     }
 
-    button {
-      width: 100%;
-      margin-top: 2rem;
-      padding: 0.75rem;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-size: 1rem;
-      cursor: pointer;
+    body.dark .section {
+        border-color: var(--border-dark);
     }
 
-    button:hover {
-      background-color: #45a049;
+    .section-header {
+        padding: 0.75rem 1rem;
+        font-weight: bold;
+        background: #f9fafb;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background 0.3s;
     }
 
-  </style>
+    body.dark .section-header {
+        background: #374151;
+    }
+
+    .section-header:hover {
+        background: #e5e7eb;
+    }
+
+    body.dark .section-header:hover {
+        background: #4b5563;
+    }
+
+    .section-content {
+        padding: 0 1rem;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease, padding 0.3s ease;
+    }
+
+    .section-content.open {
+        padding: 1rem;
+    }
+
+    input[type="text"], input[type="password"] {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        margin-bottom: 0.75rem;
+        border: 1px solid var(--border-light);
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        transition: background 0.3s, border-color 0.3s, color 0.3s;
+        box-sizing: border-box;
+    }
+
+    body.dark input[type="text"], 
+    body.dark input[type="password"] {
+        background: var(--border-dark);
+        border-color: var(--border-dark);
+        color: var(--text-dark);
+    }
+
+    .switch {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #f9fafb;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+        transition: background 0.3s;
+    }
+
+    body.dark .switch {
+        background: #374151;
+    }
+
+    .switch input {
+        display: none;
+    }
+
+    .slider {
+        position: relative;
+        width: 44px;
+        height: 24px;
+        background: #d1d5db;
+        border-radius: 9999px;
+        transition: background 0.3s;
+        cursor: pointer;
+    }
+
+    body.dark .slider {
+        background: #4b5563;
+    }
+
+    .slider::before {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 18px;
+        height: 18px;
+        background: white;
+        border-radius: 50%;
+        transition: transform 0.3s;
+    }
+
+    input:checked + .slider {
+        background: var(--primary-light);
+    }
+
+    body.dark input:checked + .slider {
+        background: var(--primary-dark);
+    }
+
+    input:checked + .slider::before {
+        transform: translateX(20px);
+    }
+
+    button.submit {
+        width: 100%;
+        padding: 0.75rem;
+        background: var(--primary-light);
+        border: none;
+        color: white;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+    button.submit:hover {
+        background: #1d4ed8;
+    }
+
+    body.dark button.submit {
+        background: var(--primary-dark);
+    }
+
+    body.dark button.submit:hover {
+        background: #2563eb;
+    }
+
+    .theme-toggle {
+        position: absolute;
+        top: -3.5rem;
+        right: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #e5e7eb;
+        border: none;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: background 0.3s;
+        width: auto;
+    }
+
+    body.dark .theme-toggle {
+        background: #4b5563;
+        color: white;
+    }
+
+    .arrow {
+        transition: transform 0.3s;
+    }
+    .arrow.open {
+        transform: rotate(90deg);
+    }
+</style>
 </head>
 <body>
-  <div class="container">
-    <h2>Configure GlucoView</h2>
-    <form id="coolForm">
-      <label for="ssid" class="blocklabel">WiFi SSID</label>
-      <input type="text" id="ssid" name="wifi-ssid" required>
 
-      <label for="wifiPassword" class="blocklabel">WiFi Password</label>
-      <input type="password" id="wifiPassword" name="wifi-password" required>
+    <form class="form-card" id="form-card">
+        <button class="theme-toggle" id="themeToggle">🌙</button>
+        <h1>Credential Entry</h1>
 
-      <label for="dexcomUser" class="blocklabel">Dexcom Username</label>
-      <input type="text" id="dexcomUser" name="dex-username" required>
+        <div class="section">
+            <div class="section-header">
+                WiFi Network
+                <span class="arrow">▶</span>
+            </div>
+            <div class="section-content">
+                <input type="text" placeholder="SSID" name="wifi-ssid" required/>
+                <input type="password" placeholder="Password" name="wifi-password" required/>
+            </div>
+        </div>
 
-      <label for="dexcomPass" class="blocklabel">Dexcom Password</label>
-      <input type="password" id="dexcomPass" name="dex-password" required>
+        <div class="section">
+            <div class="section-header">
+                Dexcom Account
+                <span class="arrow">▶</span>
+            </div>
+            <div class="section-content">
+                <input type="text" placeholder="Username" name="dex-username" required/>
+                <input type="password" placeholder="Password" name="dex-password" required/>
+            </div>
+        </div>
 
-      <label class="blocklabel">12H Reading timestamp:</label>
-      <input type="checkbox" name="12h-time" id="twelveHourTime" value="on">
-      <label id="twelveHourTimeExample">Example: 20:55</label>
-      
-      <label class="blocklabel">Display trend arrow:</label>
-      <input type="checkbox" name="trend-arrow" value="on">
+        <div class="section">
+            <div class="section-header">
+                UI Options
+                <span class="arrow">▶</span>
+            </div>
+            <div class="section-content">
+                <label class="switch">
+                    <span>12H Time</span>
+                    <input type="checkbox" name="12h-time"/>
+                    <span class="slider"></span>
+                </label>
+                <label class="switch">
+                    <span>Enable Trend Arrow</span>
+                    <input type="checkbox" name="trend-arrow"/>
+                    <span class="slider"></span>
+                </label>
+                <label class="switch">
+                    <span>Enable Delta</span>
+                    <input type="checkbox" name="delta"/>
+                    <span class="slider"></span>
+                </label>
+                <label class="switch">
+                    <span>Enable Timestamp</span>
+                    <input type="checkbox" name="timestamp"/>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
 
-      <label class="blocklabel">Display delta:</label>
-      <input type="checkbox" name="delta" value="on">
+        <div class="section">
+            <div class="section-header">
+                Update Options
+                <span class="arrow">▶</span>
+            </div>
+            <div class="section-content">
+                <label class="switch">
+                    <span>Check for updates</span>
+                    <input type="checkbox" name="update-check"/>
+                    <span class="slider"></span>
+                </label>
+                <label class="switch">
+                    <span>Auto Update</span>
+                    <input type="checkbox" name="auto-update"/>
+                    <span class="slider"></span>
+                </label>
+                <label class="switch">
+                    <span>Use Beta Channel <span style="color: red; font-weight: bold;">(EXPEREMENTAL)</span></span>
+                    <input type="checkbox" name="beta"/>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
 
-      <label class="blocklabel">Display reading timestamp:</label>
-      <input type="checkbox" name="timestamp" value="on">
-
-      <label class="blocklabel">Check for updates:</label>
-      <input type="checkbox" name="update-check" value="on">
-
-      <label class="blocklabel">Auto update:</label>
-      <input type="checkbox" name="auto-update" value="on">
-
-      <label class="blocklabel">Beta channel (EXPEREMENTAL):</label>
-      <input type="checkbox" name="beta" value="on">
-
-      <button type="submit">Save Configuration</button>
+        <button type="submit" class="submit">Save Configuration</button>
     </form>
-  </div>
-</body>
-</html>
+
 <script>
-  var twelveHourTimeCheckbox = document.getElementById("twelveHourTime");
-  var twelveHourTimeExampleLabel = document.getElementById("twelveHourTimeExample");
-
-  function updateTwelveHourTimeExample(){
-    if (twelveHourTimeCheckbox.checked){twelveHourTimeExampleLabel.textContent = "Example: 9:55 PM";}
-    else {twelveHourTimeExampleLabel.textContent = "Example: 20:55";}
-  }
-  updateTwelveHourTimeExample();
-  twelveHourTimeCheckbox.onchange = updateTwelveHourTimeExample;
-
-
-  document.getElementById("coolForm").addEventListener("submit", function() {
-    const checkboxes = document.querySelectorAll("input[type='checkbox']");
-    
-    checkboxes.forEach(function(checkbox) {
-        const hiddenInput = document.querySelector(`input[name='${checkbox.name}'][type='hidden']`);
-        
-        // If checkbox is unchecked and hidden input doesn't exist, create it
-        if (!checkbox.checked && !hiddenInput) {
-            const hidden = document.createElement("input");
-            hidden.type = "hidden";
-            hidden.name = checkbox.name;
-            hidden.value = "off";
-            document.getElementById("coolForm").appendChild(hidden);
+    // Dark mode
+    const toggleBtn = document.getElementById('themeToggle');
+    const body = document.body;
+    if (localStorage.theme === 'dark') {
+        body.classList.add('dark');
+        toggleBtn.textContent = 'L';
+    }
+    toggleBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        body.classList.toggle('dark');
+        if (body.classList.contains('dark')) {
+            localStorage.theme = 'dark';
+            toggleBtn.textContent = 'L';
+        } else {
+            localStorage.theme = 'light';
+            toggleBtn.textContent = 'D';
         }
     });
-});
+
+    // Collapsible sections
+    document.querySelectorAll('.section').forEach(section => {
+        const header = section.querySelector('.section-header');
+        const content = section.querySelector('.section-content');
+        const arrow = section.querySelector('.arrow');
+        header.addEventListener('click', () => {
+            const isOpen = content.classList.contains('open');
+            if (isOpen) {
+                content.style.maxHeight = null;
+                content.classList.remove('open');
+                arrow.classList.remove('open');
+            } else {
+                content.style.maxHeight = content.scrollHeight + 'px';
+                content.classList.add('open');
+                arrow.classList.add('open');
+            }
+        });
+    });
+    
+    document.getElementById("form-card").addEventListener("submit", function() {
+        const checkboxes = document.querySelectorAll("input[type='checkbox']");
+        
+        checkboxes.forEach(function(checkbox) {
+            const hiddenInput = document.querySelector(`input[name='${checkbox.name}'][type='hidden']`);
+            // If checkbox is unchecked and hidden input doesn't exist, create it
+            if (!checkbox.checked && !hiddenInput) {
+                const hidden = document.createElement("input");
+                hidden.type = "hidden";
+                hidden.name = checkbox.name;
+                hidden.value = "off";
+                document.getElementById("form-card").appendChild(hidden);
+            }
+        });
+    });
 </script>
+
+</body>
+</html>
