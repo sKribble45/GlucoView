@@ -84,8 +84,8 @@ struct GlucoseReadingString{
 
 // Makes the gl into a string version ready for drawing to the screen.
 static GlucoseReadingString GetGLChar(GlucoseReading gl, Config config){
-    // Config config;
-    // LoadConfig(config);
+    GlucoseReadingString glchr;
+
     bool twelveHourTime = getBooleanValue("12h-time", config);
     // Get UTC time from the epoch
     time_t epochTime = gl.tztimestamp;
@@ -117,15 +117,29 @@ static GlucoseReadingString GetGLChar(GlucoseReading gl, Config config){
         if(AM){timestr += " AM";}
         else{timestr += " PM";}
     }
+    glchr.time = timestr.c_str();
 
     // Convert bg into char
-    char bgChar[5];
-    sprintf(bgChar, "%.1f", gl.bg);
+    if (getBooleanValue("mmol-l", UiConfig)){
+        char bgChar[5];
+        sprintf(bgChar, "%.1f", gl.bg);
+        glchr.bg = bgChar;
+    }
+    else{
+        glchr.bg = to_string(gl.mgdl).c_str();
+    }
 
     // Add a plus to the delta if it is positive.
-    char deltaString[5];
-    if (gl.delta >= 0.0){ sprintf(deltaString, "+%.1f", gl.delta); }
-    else{ sprintf(deltaString, "%.1f", gl.delta); }
+    if (getBooleanValue("mmol-l", UiConfig)){
+        char deltaString[5];
+        if (gl.delta >= 0.0){ sprintf(deltaString, "+%.1f", gl.delta); }
+        else{ sprintf(deltaString, "%.1f", gl.delta); }
+        glchr.delta = deltaString;
+    }
+    else{
+        if (gl.mgdlDelta >= 0){glchr.delta = ("+" + to_string(gl.mgdlDelta)).data(); }
+        else{glchr.delta = to_string(gl.mgdlDelta).data();}
+    }
     
     const unsigned char* arrow;
     if (gl.trend_Symbol == "^" || gl.trend_Symbol == "^^") arrow = ArrowN_bits;
@@ -134,8 +148,8 @@ static GlucoseReadingString GetGLChar(GlucoseReading gl, Config config){
     else if (gl.trend_Symbol == "\\v") arrow = ArrowSE_bits;
     else if (gl.trend_Symbol == "v" || gl.trend_Symbol == "vv") arrow = ArrowS_bits;
     else{arrow = ArrowE_bits;}
-
-    GlucoseReadingString glchr = {bgChar, deltaString, timestr.c_str(), arrow};
+    glchr.arrow = arrow;
+    
     return glchr;
 }
 
@@ -144,9 +158,9 @@ void UiGlucose(GlucoseReading gl){
     GlucoseReadingString glstr = GetGLChar(gl, UiConfig);
     bool arrowEnabled = getBooleanValue("trend-arrow", UiConfig);
     int glucoseOffset = 0;
-    if (glstr.bg.length() == 3){
-        if (arrowEnabled){glucoseOffset = (EPD_2in13_V4_HEIGHT-((Font80.Width*3)+60))/2;}
-        else{glucoseOffset = (EPD_2in13_V4_HEIGHT-(Font80.Width*3))/2;}
+    if (glstr.bg.length() <= 3){
+        if (arrowEnabled){glucoseOffset = (EPD_2in13_V4_HEIGHT-((Font80.Width*glstr.bg.length())+60))/2;}
+        else{glucoseOffset = (EPD_2in13_V4_HEIGHT-(Font80.Width*glstr.bg.length()))/2;}
     }
     // Draw bg
     Paint_DrawString_EN(false, 0+glucoseOffset, (EPD_2in13_V4_WIDTH / 2) - (Font80.Height/2), glstr.bg.c_str(), &Font80, BLACK, WHITE);

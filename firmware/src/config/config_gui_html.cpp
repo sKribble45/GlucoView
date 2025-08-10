@@ -273,6 +273,16 @@ void PrintMainHtml(WiFiClient &client, Config config){
     client.println("            <div class=\"section-content\">");
     client.println("                <input type=\"text\" placeholder=\"Username\" name=\"dex-username\" value=\""+getStringValue("dex-username", config)+"\" required/>");
     client.println("                <input type=\"password\" placeholder=\"Password\" name=\"dex-password\" value=\""+MaskPassword(getStringValue("dex-password", config))+"\" required/>");
+    client.println("                <label class=\"switch\">");
+    client.println("                    <span>MMOL/L</span>");
+    client.println("                    <input type=\"checkbox\" name=\"mmol-l\" "+CheckboxValue(getBooleanValue("mmol-l", config))+"/>");
+    client.println("                    <span class=\"slider\"></span>");
+    client.println("                </label>");
+    client.println("                <label class=\"switch\">");
+    client.println("                    <span>Out of US</span>");
+    client.println("                    <input type=\"checkbox\" name=\"ous\"/ "+CheckboxValue(getBooleanValue("ous", config))+">");
+    client.println("                    <span class=\"slider\"></span>");
+    client.println("                </label>");
     client.println("            </div>");
     client.println("        </div>");
     client.println("");

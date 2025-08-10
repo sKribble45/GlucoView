@@ -231,7 +231,7 @@
 </head>
 <body>
 
-    <form class="form-card" id="form-card">
+    <form class="form-card" method="POST" id="form-card">
         <button class="theme-toggle" id="themeToggle">🌙</button>
         <h1>Credential Entry</h1>
 
@@ -254,6 +254,16 @@
             <div class="section-content">
                 <input type="text" placeholder="Username" name="dex-username" required/>
                 <input type="password" placeholder="Password" name="dex-password" required/>
+                <label class="switch">
+                    <span>MMOL/L</span>
+                    <input type="checkbox" name="mmol-l"/>
+                    <span class="slider"></span>
+                </label>
+                <label class="switch">
+                    <span>Out of US</span>
+                    <input type="checkbox" name="ous"/>
+                    <span class="slider"></span>
+                </label>
             </div>
         </div>
 
@@ -281,11 +291,6 @@
                 <label class="switch">
                     <span>Enable Timestamp</span>
                     <input type="checkbox" name="timestamp"/>
-                    <span class="slider"></span>
-                </label>
-                <label class="switch">
-                    <span>Enable WiFi Icon</span>
-                    <input type="checkbox" name="wifi-icon"/>
                     <span class="slider"></span>
                 </label>
             </div>

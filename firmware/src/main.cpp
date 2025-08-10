@@ -78,10 +78,14 @@ void NoData(){
 }
 
 void PrintGlucose(GlucoseReading gl){
-    Serial.print("BG: ");
+    Serial.print("MMOL/L: ");
     Serial.println(gl.bg);
-    Serial.print("Delta: ");
+    Serial.print("MMOL/L Delta: ");
     Serial.println(gl.delta);
+    Serial.print("MG/DL: ");
+    Serial.println(gl.mgdl);
+    Serial.print("MG/DL Delta: ");
+    Serial.println(gl.mgdlDelta);
     Serial.print("Glucose Timestamp: ");
     Serial.print(gl.timestamp);
     Serial.print(", Tz adjusted: ");
@@ -91,7 +95,7 @@ void PrintGlucose(GlucoseReading gl){
 }
 
 GlucoseReading GetBG(Config config){
-    Follower follower(true, get<String>(config["dex-username"]), get<String>(config["dex-password"]));
+    Follower follower(getBooleanValue("ous", config), getStringValue("dex-username", config), getStringValue("dex-password", config));
 
     if (!follower.getNewSessionID()){
         
@@ -154,7 +158,6 @@ void UpdateDisplay(Config config){
     // no longer need wifi so turn it off to save some power.
     WiFi.disconnect(true);
     WiFi.mode(WIFI_OFF);
-
     DisplayGlucose(gl, false, "", displayUpdateNeeded, wifiSignalStrength);
     
     // SLEEP!

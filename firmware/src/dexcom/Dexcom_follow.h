@@ -23,6 +23,8 @@ struct GlucoseReading
     unsigned long tztimestamp;
     double bg;
     double delta;
+    int mgdl;
+    int mgdlDelta;
     const char *trend_description;
     const char *trend_Symbol;
     // Define other members as needed for your application

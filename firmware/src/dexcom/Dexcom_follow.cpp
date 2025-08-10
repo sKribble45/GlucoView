@@ -176,12 +176,12 @@ bool Follower::GlucoseLevelsNow()
             // Extract the blood glucose value
             // GlucoseNow.mg_dl = doc[0]["Value"];
             GlucoseNow.bg = convertToMmol(doc[0]["Value"]);
-            if (!doc[1].isNull()){
-                GlucoseNow.delta = convertToMmol(doc[0]["Value"]) - convertToMmol(doc[1]["Value"]);
-            }
-            else{
-                GlucoseNow.delta = 0.0;
-            }
+            if (!doc[1].isNull()){GlucoseNow.delta = convertToMmol(doc[0]["Value"]) - convertToMmol(doc[1]["Value"]);}
+            else{GlucoseNow.delta = 0.0;}
+
+            GlucoseNow.mgdl = doc[0]["Value"];
+            if (!doc[1].isNull()){GlucoseNow.mgdlDelta = doc[0]["Value"].as<int>() - doc[1]["Value"].as<int>();}
+            else{GlucoseNow.mgdlDelta = 0;}
 
             GlucoseNow.trend_description = doc[0]["Trend"].as<const char *>();
             GlucoseNow.trend_Symbol = getTrendSymbol(GlucoseNow.trend_description);

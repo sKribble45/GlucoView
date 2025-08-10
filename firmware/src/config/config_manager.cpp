@@ -19,6 +19,8 @@ Config CONFIG_TEMPLATE = {
     {"wifi-password", ""},
     {"dex-username", ""},
     {"dex-password", ""},
+    {"mmol-l", true},
+    {"ous", true},
     {"12h-time", false},
     {"trend-arrow", true},
     {"delta", true},
