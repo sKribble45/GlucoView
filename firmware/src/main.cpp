@@ -22,7 +22,6 @@ RTC_DATA_ATTR bool noDataPrev = false;
 RTC_DATA_ATTR bool wifiTimoutPrev = false;
 RTC_DATA_ATTR int wakeupTime = 0;
 RTC_DATA_ATTR bool noWifiPrev = false;
-
 RTC_DATA_ATTR int dexErrors = 0;
 RTC_DATA_ATTR bool displayUpdateNeeded = false;
 
@@ -37,31 +36,6 @@ const int TIMOUT_WIFI_SLEEP = 30;
 const int NO_WIFI_SLEEP = 5*60;
 const int RETRY_NO_WIFI_SLEEP = 20;
 const int DEXCOM_ERROR_SLEEP = 1*60;
-
-UBYTE *Epaper_Image;
-
-#define BUTTON_PIN D5
-
-void Update(){
-    String URL = GetFirmwareUrl();
-    if (URL != ""){
-        UiFullClear();
-        UiWarning("Updating...", "Downloading update... Do not unplug the device.");
-        UiShow();
-        if (UpdateFromUrl(URL)){
-            UiFullClear();
-            UiWarning("Update Sucess", "Restarting...");
-            UiShow();
-            ESP.restart();
-        }
-        else{
-            UiFullClear();
-            UiWarning("Update Failed", "HTTP Request failed.");
-            UiShow();
-        }
-        
-    }
-}
 
 void NoData(){
     if (noDataPrev){
@@ -98,7 +72,6 @@ GlucoseReading GetBG(Config config){
     Follower follower(getBooleanValue("ous", config), getStringValue("dex-username", config), getStringValue("dex-password", config));
 
     if (!follower.getNewSessionID()){
-        
         // On failure to connect to the dexcom servers display no data.
         if (dexErrors == 1){
             DisplayGlucose(prevGl, true, "Dexcom Error", displayUpdateNeeded, wifiSignalStrength);
@@ -150,10 +123,9 @@ void UpdateDisplay(Config config){
     if (getBooleanValue("update-check", config)){
         displayUpdateNeeded = CheckForUpdate();
         if (getBooleanValue("auto-update", config) && displayUpdateNeeded){
-            Update();
+            OtaUpdate();
         }
     }
-    
 
     // no longer need wifi so turn it off to save some power.
     WiFi.disconnect(true);
@@ -216,65 +188,6 @@ void OnStart(Config config) {
             noWifiPrev = true;
         }
     }
-}
-
-void WaitForButtonPress(){
-    if (digitalRead(BUTTON_PIN)){
-        while (digitalRead(BUTTON_PIN)){delay(20);}
-    }
-    while (!digitalRead(BUTTON_PIN)){delay(20);}
-    while (digitalRead(BUTTON_PIN)){delay(20);}
-}
-
-void UpdateMode(){
-    Serial.print("Started Update mode, Waiting for update");
-    UiFullClear();
-    UiUpdateMode();
-    UiShow();
-
-    WaitForButtonPress();
-
-    UiFullClear();
-    UiWarning("Updating...", "Connecting to WiFi...");
-    UiShow();
-
-    Config config;
-    LoadConfig(config);
-    UpdateInitConfig(config);
-    UiInitConfig(config);
-
-    String wifiSsid = getStringValue("wifi-ssid", config);
-    String wifiPassword = getStringValue("wifi-password", config);
-    #if DEBUG
-        Serial.print("ssid: ");
-        Serial.print(wifiSsid);
-        Serial.print(" , password: ");
-        Serial.println(wifiPassword);
-    #endif
-
-    if (ConnectToNetwork(wifiSsid, wifiPassword)){
-        UiFullClear();
-        UiWarning("Updating...", "Checking for updates...");
-        UiShow();
-        if (CheckForUpdate()){
-            Update();
-        }
-        else{
-            Serial.println("No update found.");
-            UiFullClear();
-            UiWarning("Update Failed", "No update found.");
-            UiShow();
-        }
-    }
-    else{
-        Serial.println("Couldent connect to wifi, update failed.");
-        UiFullClear();
-        UiWarning("Update Failed", "Couldent connect to wifi network.");
-        UiShow();
-    }
-    WaitForButtonPress();
-    ESP.restart();
-
 }
 
 void StartConfiguration(Config &config){

@@ -11,6 +11,8 @@
 #include <string>
 #include <Update.h>
 #include "config/config_manager.h"
+#include "UI.h"
+#include "pins.h"
 
 using namespace std;
 
@@ -200,4 +202,83 @@ bool UpdateFromUrl(String url){
 
     http.end();
     return false;
+}
+
+void OtaUpdate(){
+    String URL = GetFirmwareUrl();
+    if (URL != ""){
+        UiFullClear();
+        UiWarning("Updating...", "Downloading update... Do not unplug the device.");
+        UiShow();
+        if (UpdateFromUrl(URL)){
+            UiFullClear();
+            UiWarning("Update Sucess", "Restarting...");
+            UiShow();
+            ESP.restart();
+        }
+        else{
+            UiFullClear();
+            UiWarning("Update Failed", "HTTP Request failed.");
+            UiShow();
+        }
+        
+    }
+}
+
+void WaitForButtonPress(){
+    if (digitalRead(BUTTON_PIN)){
+        while (digitalRead(BUTTON_PIN)){delay(20);}
+    }
+    while (!digitalRead(BUTTON_PIN)){delay(20);}
+    while (digitalRead(BUTTON_PIN)){delay(20);}
+}
+
+void UpdateMode(){
+    Serial.print("Started Update mode, Waiting for update");
+    UiFullClear();
+    UiUpdateMode();
+    UiShow();
+
+    WaitForButtonPress();
+
+    UiFullClear();
+    UiWarning("Updating...", "Connecting to WiFi...");
+    UiShow();
+
+    Config config;
+    LoadConfig(config);
+    UpdateInitConfig(config);
+    UiInitConfig(config);
+
+    String wifiSsid = getStringValue("wifi-ssid", config);
+    String wifiPassword = getStringValue("wifi-password", config);
+    #if DEBUG
+        Serial.print("ssid: ");
+        Serial.print(wifiSsid);
+        Serial.print(" , password: ");
+        Serial.println(wifiPassword);
+    #endif
+
+    if (ConnectToNetwork(wifiSsid, wifiPassword)){
+        UiFullClear();
+        UiWarning("Updating...", "Checking for updates...");
+        UiShow();
+        if (CheckForUpdate()){
+            OtaUpdate();
+        }
+        else{
+            Serial.println("No update found.");
+            UiFullClear();
+            UiWarning("Update Failed", "No update found.");
+            UiShow();
+        }
+    }
+    else{
+        Serial.println("Couldent connect to wifi, update failed.");
+        UiFullClear();
+        UiWarning("Update Failed", "Couldent connect to wifi network.");
+        UiShow();
+    }
+    WaitForButtonPress();
+    ESP.restart();
 }

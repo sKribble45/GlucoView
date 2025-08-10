@@ -10,6 +10,8 @@ extern RTC_DATA_ATTR bool updateNeeded;
 extern RTC_DATA_ATTR time_t lastCheckedForUpdates;
 extern Config updateConfig;
 void UpdateInitConfig(Config config);
+void UpdateMode();
+void OtaUpdate();
 
 typedef struct{
     int major;
