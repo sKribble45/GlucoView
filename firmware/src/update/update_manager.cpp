@@ -85,6 +85,11 @@ Version ParseStringVersion(String versionString){
 
 JsonObject GetLatestRelease(JsonDocument &json){
     JsonObject latestRelease = json[0];
+    for (JsonObject release: json.as<JsonArray>()){
+        if (!release["prerelease"].as<bool>()){
+            latestRelease = release;
+        }
+    }
     Version latestVesion = ParseStringVersion(json[0]["tag_name"]);
     if (getBooleanValue("beta", updateConfig)){
         for (JsonObject release : json.as<JsonArray>()){
