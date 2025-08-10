@@ -302,6 +302,11 @@ void PrintMainHtml(WiFiClient &client, Config config){
     client.println("                    <input type=\"checkbox\" name=\"timestamp\" "+CheckboxValue(getBooleanValue("timestamp", config))+"/>");
     client.println("                    <span class=\"slider\"></span>");
     client.println("                </label>");
+    client.println("                <label class=\"switch\">");
+    client.println("                    <span>Enable Wifi Icon</span>");
+    client.println("                    <input type=\"checkbox\" name=\"wifi-icon\" "+CheckboxValue(getBooleanValue("wifi-icon", config))+"/>");
+    client.println("                    <span class=\"slider\"></span>");
+    client.println("                </label>");
     client.println("            </div>");
     client.println("        </div>");
     client.println("");
