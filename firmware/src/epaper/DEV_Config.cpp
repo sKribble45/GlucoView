@@ -28,7 +28,6 @@
 #
 ******************************************************************************/
 #include "DEV_Config.h"
-#include "pins.h"
 
 void GPIO_Config(void)
 {

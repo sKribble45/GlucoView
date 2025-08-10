@@ -1,7 +1,6 @@
 #include <WiFi.h>
 #include <Arduino.h>
 #include "epaper/EPD.h"
-#include "pins.h"
 #include "driver/rtc_io.h"
 
 

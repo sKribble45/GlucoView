@@ -12,7 +12,6 @@
 #include <Update.h>
 #include "config/config_manager.h"
 #include "UI.h"
-#include "pins.h"
 
 using namespace std;
 

@@ -33,7 +33,6 @@
 #include <Arduino.h>
 #include <stdint.h>
 #include <stdio.h>
-#include "pins.h"
 
 /**
  * data
