@@ -15,11 +15,10 @@ GlucoView is a low power, wall mounted E-paper display made for type one diabeti
 - Uses an epaper screen and deep sleep which allows it to be extremely low power.
 - Uses partial updates on the screen so glucose updates display extremely quick.
 - Has OTA (Over the air) updates so you never have to manualy update.
+- Mg/dl or Mmol/l option.
 
 ## Future plans
 - Nightscout compatibility.
-- Dexcom out of us setting.
-- mg/dl option instead of mmol/l.
 - List wifi networks rather than enter ssid manualy.
 - Multiple Ui options including a graph.
 - Battery powered version.
