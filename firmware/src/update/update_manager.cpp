@@ -88,16 +88,17 @@ JsonObject GetLatestRelease(JsonDocument &json){
     for (JsonObject release: json.as<JsonArray>()){
         if (!release["prerelease"].as<bool>()){
             latestRelease = release;
+            break;
         }
     }
     Version latestVesion = ParseStringVersion(json[0]["tag_name"]);
     if (getBooleanValue("beta", updateConfig)){
         for (JsonObject release : json.as<JsonArray>()){
-            Version releaseVersion = ParseStringVersion(release["tag_name"].as<const char*>());
+            Version releaseItteratorVersion = ParseStringVersion(release["tag_name"].as<const char*>());
             if (release["prerelease"].as<bool>() 
-            && latestVesion.major <= releaseVersion.major 
-            && latestVesion.minor <= releaseVersion.minor 
-            && latestVesion.revision <= releaseVersion.revision){
+            && latestVesion.major <= releaseItteratorVersion.major 
+            && latestVesion.minor <= releaseItteratorVersion.minor 
+            && latestVesion.revision <= releaseItteratorVersion.revision){
                 Serial.println("Beta release found");
                 latestRelease = release;
                 break;

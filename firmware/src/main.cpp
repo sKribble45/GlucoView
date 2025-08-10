@@ -191,11 +191,11 @@ void OnStart(Config config) {
         if (savedNetworkExists){
             Serial.println("A saved wifi network exists :)");
             if (wifiTimoutPrev){
-                DisplayGlucose(prevGl, true, "WiFi Timout", displayUpdateNeeded, wifiSignalStrength);
+                if (prevGl.bg != 0.0){DisplayGlucose(prevGl, true, "WiFi Timout", displayUpdateNeeded, wifiSignalStrength);}
                 Sleep(TIMOUT_WIFI_SLEEP);
             }
             else{
-                DisplayGlucose(prevGl, false, "", displayUpdateNeeded, wifiSignalStrength);
+                if (prevGl.bg != 0.0){DisplayGlucose(prevGl, false, "", displayUpdateNeeded, wifiSignalStrength);}
             }
             Serial.println("Failed to connect to wifi network (timed out) :(");
             wifiTimoutPrev = true;
@@ -203,7 +203,7 @@ void OnStart(Config config) {
         }
         else{
             if (noWifiPrev){
-                DisplayGlucose(prevGl, true, "No WiFi", displayUpdateNeeded, wifiSignalStrength);
+                if (prevGl.bg != 0.0){DisplayGlucose(prevGl, true, "No WiFi", displayUpdateNeeded, wifiSignalStrength);}
                 Sleep(NO_WIFI_SLEEP);
             }
             else{
@@ -275,7 +275,7 @@ void UpdateMode(){
 }
 
 void StartConfiguration(Config &config){
-    string ApPassword = "glucoview_"+RandomString(5);
+    String ApPassword = "glucoview_"+GetSerialNumber();
     String ApSsid = "GlucoView" + GetSerialNumber();
     HostConfigAP(config, ApSsid.c_str(), ApPassword.c_str());
     SaveConfig(config);

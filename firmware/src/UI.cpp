@@ -297,6 +297,7 @@ void UiWebPageConectionPage(String pageLink){
 void UiUpdateMode(){
     Paint_DrawString_EN(true, EPD_2in13_V4_HEIGHT / 2, 15, "Update Mode", &Font24, WHITE, BLACK);
     string versionString = "Version: V" + to_string(VERSION_MAJOR) + "." + to_string(VERSION_MINOR) + "." + to_string(VERSION_REVISION);
+    if (VERSION_BUILD != 0){versionString += "-" + to_string(VERSION_BUILD);}
     Paint_DrawString_EN(true, EPD_2in13_V4_HEIGHT / 2, 22+ (Font24.Height / 2), versionString.c_str(), &Font16, WHITE, BLACK);
     Paint_DrawString_EN(false, 0, 15 + (Font24.Height / 2) + (Font16.Height), "Press the button on the side of the device to update from github or use platformio to flash from usb.", &Font12, WHITE, BLACK);
     uiLastScreen = UPDATE;
