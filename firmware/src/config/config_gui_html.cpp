@@ -317,6 +317,11 @@ void PrintMainHtml(WiFiClient &client, Config config){
     client.println("                    <input type=\"checkbox\" name=\"wifi-icon\" "+CheckboxValue(getBooleanValue("wifi-icon", config))+"/>");
     client.println("                    <span class=\"slider\"></span>");
     client.println("                </label>");
+    client.println("                <label class=\"switch\">");
+    client.println("                    <span>Use Relative Timestamp</span>");
+    client.println("                    <input type=\"checkbox\" name=\"rel-timestamp\" "+CheckboxValue(getBooleanValue("rel-timestamp", config))+"/>");
+    client.println("                    <span class=\"slider\"></span>");
+    client.println("                </label>");
     client.println("            </div>");
     client.println("        </div>");
     client.println("");

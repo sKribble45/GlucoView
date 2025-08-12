@@ -19,6 +19,7 @@ extern String applicationId;
 // GlucoseReading structure
 struct GlucoseReading
 {
+    int minsSinceReading;
     unsigned long timestamp;
     unsigned long tztimestamp;
     double bg;

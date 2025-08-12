@@ -3,6 +3,7 @@
 #include "dexcom/Dexcom_follow.h"
 
 RTC_DATA_ATTR int partialUpdates = 0;
+const int PARTIAL_UPDATE_LIMIT = 50;
 RTC_DATA_ATTR GlucoseScreen prevgs;
 
 void DrawGlucoseBuffer(GlucoseReading gl, bool glucoseStrikethrough, String warning, bool updateNeeded, int wifiSignalStrength){
@@ -21,7 +22,7 @@ void ClearGlucoseBuffer(GlucoseReading gl, bool glucoseStrikethrough, String war
 }
 
 void DisplayGlucose(GlucoseReading gl, bool glucoseStrikethrough, String warning, bool updateNeeded, int wifiSignalStrength){
-    if (uiLastScreen != GLUCOSE || partialUpdates >= 10){
+    if (uiLastScreen != GLUCOSE || partialUpdates >= PARTIAL_UPDATE_LIMIT || (warning == "" && prevgs.warning != "")){
         // Write the glucose screen to buffer.
         DrawGlucoseBuffer(gl, glucoseStrikethrough, warning, updateNeeded, wifiSignalStrength);
         UiShow();

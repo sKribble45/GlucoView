@@ -85,39 +85,44 @@ struct GlucoseReadingString{
 // Makes the gl into a string version ready for drawing to the screen.
 static GlucoseReadingString GetGLChar(GlucoseReading gl, Config config){
     GlucoseReadingString glchr;
+    if (!getBooleanValue("rel-timestamp", UiConfig)){
+        bool twelveHourTime = getBooleanValue("12h-time", config);
+        // Get UTC time from the epoch
+        time_t epochTime = gl.tztimestamp;
+        struct tm *utc = gmtime(&epochTime);
+        
+        // Make time string
+        int minutes = utc->tm_min;
+        int hours = utc->tm_hour;
+        // ajust hours if 12h time
+        bool AM = false;
+        if (twelveHourTime){
+            if (hours == 12){AM = false;}
+            else if (hours > 12){hours -= 12;}
+            else {AM = true;}
+        }
+        string minutesString;
+        string hoursString;
 
-    bool twelveHourTime = getBooleanValue("12h-time", config);
-    // Get UTC time from the epoch
-    time_t epochTime = gl.tztimestamp;
-    struct tm *utc = gmtime(&epochTime);
-    
-    // Make time string
-    int minutes = utc->tm_min;
-    int hours = utc->tm_hour;
-    // ajust hours if 12h time
-    bool AM = false;
-    if (twelveHourTime){
-        if (hours == 12){AM = false;}
-        else if (hours > 12){hours -= 12;}
-        else {AM = true;}
+        // Statring from a blank string add the 0 at the start if the number of minutes or hours is bellow 10 otherwise the time could look like this: 1:4 instead of this: 01:04
+        if (minutes < 10){minutesString += "0";}
+        minutesString += to_string(minutes);
+        if (hours < 10 && !twelveHourTime){hoursString += "0";}
+        hoursString += to_string(hours);
+
+        // Create a string with the hour and minute of the timestamp.
+        string timestr = hoursString + ":" + minutesString;
+        // add the suffix AM or PM to the 12h time.
+        if (twelveHourTime){
+            if(AM){timestr += " AM";}
+            else{timestr += " PM";}
+        }
+        glchr.time = timestr.c_str();
     }
-    string minutesString;
-    string hoursString;
-
-    // Statring from a blank string add the 0 at the start if the number of minutes or hours is bellow 10 otherwise the time could look like this: 1:4 instead of this: 01:04
-    if (minutes < 10){minutesString += "0";}
-    minutesString += to_string(minutes);
-    if (hours < 10 && !twelveHourTime){hoursString += "0";}
-    hoursString += to_string(hours);
-
-    // Create a string with the hour and minute of the timestamp.
-    string timestr = hoursString + ":" + minutesString;
-    // add the suffix AM or PM to the 12h time.
-    if (twelveHourTime){
-        if(AM){timestr += " AM";}
-        else{timestr += " PM";}
+    else{
+        glchr.time = to_string(gl.minsSinceReading).c_str();
+        glchr.time += "Mins";
     }
-    glchr.time = timestr.c_str();
 
     // Convert bg into char
     if (getBooleanValue("mmol-l", UiConfig)){

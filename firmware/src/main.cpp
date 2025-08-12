@@ -74,13 +74,13 @@ GlucoseReading GetBG(Config config){
     if (!follower.getNewSessionID()){
         // On failure to connect to the dexcom servers display no data.
         if (dexErrors == 1){
-            DisplayGlucose(prevGl, true, "Dexcom Error", displayUpdateNeeded, wifiSignalStrength);
+            DisplayGlucose(prevGl, true, "Dex Error", displayUpdateNeeded, wifiSignalStrength);
         }
         if (dexErrors < 3){dexErrors++;}
         // if there has been 3 consecutive dexcom errors tell the user that they may want to update their credentials.
         else{
             UiFullClear(); 
-            UiWarning("Dexcom Error", "You may want to consider re-pairing using the pairing button on the left side of the device as this error can be caused by inputing your dexcom credentials incorrectly."); 
+            UiWarning("Dex Error", "You may want to consider re-pairing using the pairing button on the left side of the device as this error can be caused by inputing your dexcom credentials incorrectly."); 
             UiShow();
         }
         if (dexErrors == 0){
@@ -94,17 +94,10 @@ GlucoseReading GetBG(Config config){
     GlucoseReading gl = follower.GlucoseNow;
     PrintGlucose(gl);
 
-    // if the reading hasnt changed yet call the no data function.
-    if (gl.timestamp == prevGl.timestamp){NoData();}
-    else{noDataPrev = false;}
-
     return gl;
 }
 
 void UpdateDisplay(Config config){
-    // Get the blood glucose reading from dexcom.
-    GlucoseReading gl = GetBG(config);
-    prevGl = gl;
     // Get the current epoch time.
     unsigned long currentTime = GetEpoch();
     if (currentTime == 0){
@@ -120,6 +113,14 @@ void UpdateDisplay(Config config){
         }
     }
 
+    // Get the blood glucose reading from dexcom.
+    GlucoseReading gl = prevGl;
+    if ((currentTime - prevGl.timestamp <= 0) || prevGl.bg == 0.0){
+        gl = GetBG(config);
+        gl.minsSinceReading = round((currentTime - gl.timestamp) / 60);
+        prevGl = gl;
+    }
+
     if (getBooleanValue("update-check", config)){
         displayUpdateNeeded = CheckForUpdate();
         if (getBooleanValue("auto-update", config) && displayUpdateNeeded){
@@ -130,17 +131,26 @@ void UpdateDisplay(Config config){
     // no longer need wifi so turn it off to save some power.
     WiFi.disconnect(true);
     WiFi.mode(WIFI_OFF);
-    DisplayGlucose(gl, false, "", displayUpdateNeeded, wifiSignalStrength);
     
     // SLEEP!
-    // work out the time it has to sleep for the next reading.
-    int sleepTime = (5 * 60) - (currentTime - gl.timestamp);
+    int timeUntilNewReading = (5 * 60) - (currentTime - gl.timestamp);
 
     // sleep for the next reading.
-    wakeupTime = currentTime + sleepTime;
-    if (sleepTime < 0 && sleepTime > -120){Sleep(10);}
-    else if(sleepTime < 0){NoData();}
-    else {Sleep(sleepTime+5);} //TODO: add 2 to sleep time if its missing readings.
+    wakeupTime = currentTime + timeUntilNewReading;
+    if (timeUntilNewReading < 0 && timeUntilNewReading > -120){Sleep(10);}
+    else if(timeUntilNewReading < 0){NoData();}
+    else {
+        DisplayGlucose(gl, false, "", displayUpdateNeeded, wifiSignalStrength);
+        if (getBooleanValue("rel-timestamp", config)){
+            // Work out how long to sleep.
+            int sleepTimeRemainder = timeUntilNewReading - (round(timeUntilNewReading/60)*60);
+            if (sleepTimeRemainder){Sleep(sleepTimeRemainder);}
+            else{Sleep(60);}
+        }
+        else{
+            Sleep(timeUntilNewReading);
+        }
+    } //TODO: add 2 to sleep time if its missing readings.
 }
 
 void OnStart(Config config) {

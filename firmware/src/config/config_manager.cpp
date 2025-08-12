@@ -25,6 +25,7 @@ Config CONFIG_TEMPLATE = {
     {"trend-arrow", true},
     {"delta", true},
     {"timestamp", true},
+    {"rel-timestamp", true},
     {"wifi-icon", true},
     {"update-check", true},
     {"auto-update", true},
