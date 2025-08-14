@@ -24,6 +24,7 @@ void ClearGlucoseBuffer(GlucoseReading gl, bool glucoseStrikethrough, String war
 void DisplayGlucose(GlucoseReading gl, bool glucoseStrikethrough, String warning, bool updateNeeded, int wifiSignalStrength){
     if (uiLastScreen != GLUCOSE || partialUpdates >= PARTIAL_UPDATE_LIMIT || (warning == "" && prevgs.warning != "")){
         // Write the glucose screen to buffer.
+        UiFullClear();
         DrawGlucoseBuffer(gl, glucoseStrikethrough, warning, updateNeeded, wifiSignalStrength);
         UiShow();
         partialUpdates = 0;

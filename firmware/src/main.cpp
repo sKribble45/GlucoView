@@ -37,12 +37,19 @@ const int NO_WIFI_SLEEP = 5*60;
 const int RETRY_NO_WIFI_SLEEP = 20;
 const int DEXCOM_ERROR_SLEEP = 20;
 
-void NoData(unsigned long currentTime){
+void NoData(unsigned long currentTime, Config config){
     if (noDataPrev){
         Serial.println("No Data!");
         DisplayGlucose(prevGl, true, "No Data", displayUpdateNeeded, wifiSignalStrength);
-        wakeupTime = currentTime + NO_DATA_SLEEP;
-        Sleep(NO_DATA_SLEEP);
+        if (!
+            getBooleanValue("rel-timestamp", config)){
+            wakeupTime = currentTime + NO_DATA_SLEEP;
+            Sleep(NO_DATA_SLEEP);
+        }
+        else{
+            wakeupTime = currentTime + 60;
+            Sleep(60);
+        }
     }
     else{
         noDataPrev = true;
@@ -99,13 +106,26 @@ GlucoseReading GetBG(Config config){
     return gl;
 }
 
+bool UpdateBg(){
+    bool updateBg;
+    if (!noDataPrev){
+        updateBg = (wakeupTime - prevGl.timestamp > 5*60 -2);
+    }
+    else{
+        int minsSinceLastReading = round((double)((wakeupTime - prevGl.timestamp)/60));
+        updateBg = ((double)minsSinceLastReading/5 == floor((double)minsSinceLastReading/5));
+    }
+    
+    return updateBg;
+}
+
 void UpdateDisplay(Config config){
     // Get the current epoch time.
     unsigned long currentTime = wakeupTime;
 
     // Get the blood glucose reading from dexcom.
     GlucoseReading gl = prevGl;
-    if ((currentTime - prevGl.timestamp > 5*60 -2) || prevGl.bg == 0.0 || currentTime == 0){
+    if (UpdateBg() || prevGl.bg == 0.0 || wakeupTime == 0){
         currentTime = GetEpoch();
         if (currentTime == 0){
             if (wakeupTime > 0){
@@ -122,11 +142,11 @@ void UpdateDisplay(Config config){
 
         gl = GetBG(config);
         gl.minsSinceReading = round((currentTime - gl.timestamp) / 60);
-        prevGl = gl;
     }
     else{
         gl.minsSinceReading = round((wakeupTime - gl.timestamp) / 60);
     }
+    prevGl = gl;
 
     if (getBooleanValue("update-check", config)){
         displayUpdateNeeded = CheckForUpdate();
@@ -143,12 +163,8 @@ void UpdateDisplay(Config config){
     int timeUntilNewReading = (5 * 60) - (currentTime - gl.timestamp);
 
     // sleep for the next reading.
-    wakeupTime = currentTime + timeUntilNewReading;
-    if (timeUntilNewReading < 0 && timeUntilNewReading > -120){
-        wakeupTime = currentTime + 10;
-        Sleep(10);
-    }
-    else if(timeUntilNewReading < 0){NoData(currentTime);}
+    
+    if(timeUntilNewReading < 0){NoData(currentTime, config);}
     else {
         DisplayGlucose(gl, false, "", displayUpdateNeeded, wifiSignalStrength);
         if (getBooleanValue("rel-timestamp", config)){
@@ -165,6 +181,7 @@ void UpdateDisplay(Config config){
             }
         }
         else{
+            wakeupTime = currentTime + timeUntilNewReading+4;
             Sleep(timeUntilNewReading+4);
         }
     } //TODO: add 2 to sleep time if its missing readings.
@@ -180,7 +197,7 @@ void OnStart(Config config) {
         Serial.println(wifiPassword);
     #endif
 
-    if ((wakeupTime - prevGl.timestamp > 5*60-2) || prevGl.bg == 0.0 || wakeupTime == 0){
+    if (UpdateBg() || prevGl.bg == 0.0 || wakeupTime == 0){
         if (ConnectToNetwork(wifiSsid, wifiPassword)){
             noWifiPrev = false;
             wifiTimoutPrev = false;
