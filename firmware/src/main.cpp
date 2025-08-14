@@ -28,14 +28,14 @@ RTC_DATA_ATTR bool displayUpdateNeeded = false;
 int wifiSignalStrength = 0;
 
 // Sleep times.
-const int NO_TIME_SLEEP = 20;
+const int NO_TIME_SLEEP = 5;
 const int NO_DATA_SLEEP = 5*60;
-const int SHORT_NO_DATA_SLEEP = 20;
+const int RETRY_NO_DATA_SLEEP = 10;
 const int RETRY_TIMOUT_WIFI_SLEEP = 10;
 const int TIMOUT_WIFI_SLEEP = 30;
 const int NO_WIFI_SLEEP = 5*60;
 const int RETRY_NO_WIFI_SLEEP = 20;
-const int DEXCOM_ERROR_SLEEP = 1*60;
+const int DEXCOM_ERROR_SLEEP = 20;
 
 void NoData(unsigned long currentTime){
     if (noDataPrev){
@@ -47,8 +47,8 @@ void NoData(unsigned long currentTime){
     else{
         noDataPrev = true;
         Serial.print("No new reading yet.");
-        wakeupTime = currentTime + SHORT_NO_DATA_SLEEP;
-        Sleep(SHORT_NO_DATA_SLEEP);
+        wakeupTime = currentTime + RETRY_NO_DATA_SLEEP;
+        Sleep(RETRY_NO_DATA_SLEEP);
     }
     
 }
