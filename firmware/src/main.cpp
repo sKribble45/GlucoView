@@ -25,7 +25,7 @@ RTC_DATA_ATTR bool noWifiPrev = false;
 RTC_DATA_ATTR int dexErrors = 0;
 RTC_DATA_ATTR bool displayUpdateNeeded = false;
 
-int wifiSignalStrength = 0;
+RTC_DATA_ATTR int wifiSignalStrength = 0;
 
 // Sleep times.
 const int NO_TIME_SLEEP = 5;
