@@ -5,12 +5,12 @@
 #include <stdlib.h>
 #include "UI.h"
 #include "config/config_manager.h"
-#include "wifi_manager/wifi_manager.h"
+#include "wifi_manager.h"
 #include "driver/rtc_io.h"
 #include <nvs_flash.h>
 #include "images/arrows.h"
 #include "glucose_screen.h"
-#include "update/update_manager.h"
+#include "update_manager.h"
 #include "epoch_time.h"
 #include "sleep.h"
 using namespace std;
@@ -42,7 +42,7 @@ void NoData(unsigned long currentTime, Config config){
         Serial.println("No Data!");
         DisplayGlucose(prevGl, true, "No Data", displayUpdateNeeded, wifiSignalStrength);
         if (!
-            getBooleanValue("rel-timestamp", config)){
+            GetBooleanValue("rel-timestamp", config)){
             wakeupTime = currentTime + NO_DATA_SLEEP;
             Sleep(NO_DATA_SLEEP);
         }
@@ -78,7 +78,7 @@ void PrintGlucose(GlucoseReading gl){
 }
 
 GlucoseReading GetBG(Config config){
-    Follower follower(getBooleanValue("ous", config), getStringValue("dex-username", config), getStringValue("dex-password", config));
+    Follower follower(GetBooleanValue("ous", config), GetStringValue("dex-username", config), GetStringValue("dex-password", config));
 
     if (!follower.getNewSessionID()){
         // On failure to connect to the dexcom servers display no data.
@@ -108,14 +108,11 @@ GlucoseReading GetBG(Config config){
 
 bool UpdateBg(){
     bool updateBg;
-    if (!noDataPrev){
-        updateBg = (wakeupTime - prevGl.timestamp > 5*60 -2);
-    }
-    else{
-        int minsSinceLastReading = round((double)((wakeupTime - prevGl.timestamp)/60));
-        updateBg = ((double)minsSinceLastReading/5 == floor((double)minsSinceLastReading/5));
-    }
-    
+    int minsSinceLastReading = round((double)((wakeupTime - prevGl.timestamp)/60));
+    updateBg = (
+        (wakeupTime - prevGl.timestamp > 5*60 -2) && !noDataPrev) || 
+        (((double)minsSinceLastReading/5 == floor((double)minsSinceLastReading/5)) && noDataPrev
+    );
     return updateBg;
 }
 
@@ -148,9 +145,9 @@ void UpdateDisplay(Config config){
     }
     prevGl = gl;
 
-    if (getBooleanValue("update-check", config)){
+    if (GetBooleanValue("update-check", config)){
         displayUpdateNeeded = CheckForUpdate();
-        if (getBooleanValue("auto-update", config) && displayUpdateNeeded){
+        if (GetBooleanValue("auto-update", config) && displayUpdateNeeded){
             OtaUpdate();
         }
     }
@@ -167,7 +164,7 @@ void UpdateDisplay(Config config){
     if(timeUntilNewReading < 0){NoData(currentTime, config);}
     else {
         DisplayGlucose(gl, false, "", displayUpdateNeeded, wifiSignalStrength);
-        if (getBooleanValue("rel-timestamp", config)){
+        if (GetBooleanValue("rel-timestamp", config)){
             // Work out how long to sleep.
             
             int sleepTimeRemainder = timeUntilNewReading - (round(timeUntilNewReading/60)*60);
@@ -188,8 +185,8 @@ void UpdateDisplay(Config config){
 }
 
 void OnStart(Config config) {
-    String wifiSsid = getStringValue("wifi-ssid", config);
-    String wifiPassword = getStringValue("wifi-password", config);
+    String wifiSsid = GetStringValue("wifi-ssid", config);
+    String wifiPassword = GetStringValue("wifi-password", config);
     #if DEBUG
         Serial.print("ssid: ");
         Serial.print(wifiSsid);

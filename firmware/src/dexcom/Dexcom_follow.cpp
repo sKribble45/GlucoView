@@ -4,6 +4,7 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <WiFi.h>
+#include "util.h"
 
 // Dexcom base API urls
 const char *DEXCOM_BASE_URL = "https://share2.dexcom.com/ShareWebServices/Services";
@@ -102,7 +103,7 @@ bool Follower::getNewSessionID()
             {
                 char characterToRemove = '\"';
 
-                response = removeCharacterFromString(http.getString(), characterToRemove);
+                response = RemoveCharacterFromString(http.getString(), characterToRemove);
                 // response = http.getString();
                 Serial.println("HTTP POST was successful!");
                 Serial.println("Response:");
@@ -211,20 +212,6 @@ double Follower::convertToMmol(int mgdl)
 {
     return mgdl / 18.01559;
 };
-
-String Follower::removeCharacterFromString(String input, char characterToRemove)
-{
-    String result;
-    for (char c : input)
-    {
-        if (c != characterToRemove)
-        {
-            result += c;
-        }
-    }
-    return result;
-};
-
 unsigned long Follower::convertToUnixTimestamp(const char *dtValue, bool tzoffset)
 {
     // Extract the numerical part of the string

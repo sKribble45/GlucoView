@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "wifi_manager/wifi_manager.h"
+#include "..\wifi_manager.h"
 #include <unordered_map>
 #include <variant>
 #include <string>
@@ -24,9 +24,9 @@ bool SerialNumberExists();
 void RandomiseSerialNumber();
 void ResetSettings();
 
-String getStringValue(string value, Config config);
-int getIntValue(string value, Config config);
-double getDoubleValue(string value, Config config);
-bool getBooleanValue(string value, Config config);
+String GetStringValue(string value, Config config);
+int GetIntValue(string value, Config config);
+double GetDoubleValue(string value, Config config);
+bool GetBooleanValue(string value, Config config);
 
 #endif

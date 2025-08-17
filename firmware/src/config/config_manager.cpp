@@ -3,11 +3,12 @@
 #include "config_manager.h"
 #include "config_gui_html.h"
 #include <Preferences.h>
-#include "wifi_manager/wifi_manager.h"
+#include "..\wifi_manager.h"
 #include "UI.h"
 #include <vector>
 #include <sstream>
 #include <unordered_map>
+#include "util.h"
 using namespace std;
 
 const char *PREFERENCES_KEY = "glucoview";
@@ -274,46 +275,33 @@ void HostConfigAP(Config &config,String APssid, String APpassword){
     Serial.println("Configured :)");
 }
 
-String getStringValue(string key, Config config){
+String GetStringValue(string key, Config config){
     ConfigValue configValue = config[key];
     if (holds_alternative<String>(configValue)){
         return get<String>(configValue);
     }
     else{return "";}
 }
-int getIntValue(string key, Config config){
+int GetIntValue(string key, Config config){
     ConfigValue configValue = config[key];
     if (holds_alternative<int>(configValue)){
         return get<int>(configValue);
     }
     else{return 0;}
 }
-double getDoubleValue(string key, Config config){
+double GetDoubleValue(string key, Config config){
     ConfigValue configValue = config[key];
     if (holds_alternative<double>(configValue)){
         return get<double>(configValue);
     }
     else{return 0.0;}
 }
-bool getBooleanValue(string key, Config config){
+bool GetBooleanValue(string key, Config config){
     ConfigValue configValue = config[key];
     if (holds_alternative<bool>(configValue)){
         return get<bool>(configValue);
     }
     else{return false;}
-}
-
-
-string RandomString(size_t length) {
-    const string characterSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/*+-=";
-    string result;
-    // Set random seed to the time.
-    srand(esp_random() + length);
-
-    for (size_t i = 0; i < length; ++i) {
-        result += characterSet[rand() % characterSet.size()];
-    }
-    return result;
 }
 
 void RandomiseSerialNumber(){

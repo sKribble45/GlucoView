@@ -1,4 +1,4 @@
-#include "config/config_manager.h"
+#include "config\config_manager.h"
 
 #ifndef __UPDATE_MANAGER_H
 #define __UPDATE_MANAGER_H

@@ -93,7 +93,7 @@ JsonObject GetLatestRelease(JsonDocument &json){
         }
     }
     Version latestVesion = ParseStringVersion(json[0]["tag_name"]);
-    if (getBooleanValue("beta", updateConfig)){
+    if (GetBooleanValue("beta", updateConfig)){
         for (JsonObject release : json.as<JsonArray>()){
             Version releaseItteratorVersion = ParseStringVersion(release["tag_name"].as<const char*>());
             if (release["prerelease"].as<bool>() 
@@ -108,8 +108,6 @@ JsonObject GetLatestRelease(JsonDocument &json){
     }
     return latestRelease;
 }
-
-
 
 // Get version from github (defults to 0.0.0-0)
 Version GetVersion(){
@@ -130,7 +128,7 @@ bool CheckForUpdate(){
     if (t - lastCheckedForUpdates > 30*60 || lastCheckedForUpdates == 0){
         Version latestVersion = GetVersion();
         if (latestVersion.major != 0){
-            if (getBooleanValue("beta", updateConfig)){
+            if (GetBooleanValue("beta", updateConfig)){
                 Serial.println(latestVersion.build);
                 updateNeeded = (latestVersion.major > VERSION_MAJOR || latestVersion.minor > VERSION_MINOR || latestVersion.revision > VERSION_REVISION || latestVersion.build > VERSION_BUILD);
             }
@@ -249,8 +247,8 @@ void UpdateMode(){
     UpdateInitConfig(config);
     UiInitConfig(config);
 
-    String wifiSsid = getStringValue("wifi-ssid", config);
-    String wifiPassword = getStringValue("wifi-password", config);
+    String wifiSsid = GetStringValue("wifi-ssid", config);
+    String wifiPassword = GetStringValue("wifi-password", config);
     #if DEBUG
         Serial.print("ssid: ");
         Serial.print(wifiSsid);

@@ -11,7 +11,7 @@
 #include <string>
 #include "images/arrows.h"
 #include "images/icons.h"
-#include "update/update_manager.h"
+#include "update_manager.h"
 
 using namespace std;
 
@@ -85,8 +85,8 @@ struct GlucoseReadingString{
 // Makes the gl into a string version ready for drawing to the screen.
 static GlucoseReadingString GetGLChar(GlucoseReading gl, Config config){
     GlucoseReadingString glchr;
-    if (!getBooleanValue("rel-timestamp", UiConfig)){
-        bool twelveHourTime = getBooleanValue("12h-time", config);
+    if (!GetBooleanValue("rel-timestamp", UiConfig)){
+        bool twelveHourTime = GetBooleanValue("12h-time", config);
         // Get UTC time from the epoch
         time_t epochTime = gl.tztimestamp;
         struct tm *utc = gmtime(&epochTime);
@@ -125,7 +125,7 @@ static GlucoseReadingString GetGLChar(GlucoseReading gl, Config config){
     }
 
     // Convert bg into char
-    if (getBooleanValue("mmol-l", UiConfig)){
+    if (GetBooleanValue("mmol-l", UiConfig)){
         char bgChar[5];
         sprintf(bgChar, "%.1f", gl.bg);
         glchr.bg = bgChar;
@@ -135,7 +135,7 @@ static GlucoseReadingString GetGLChar(GlucoseReading gl, Config config){
     }
 
     // Add a plus to the delta if it is positive.
-    if (getBooleanValue("mmol-l", UiConfig)){
+    if (GetBooleanValue("mmol-l", UiConfig)){
         char deltaString[5];
         if (gl.delta >= 0.0){ sprintf(deltaString, "+%.1f", gl.delta); }
         else{ sprintf(deltaString, "%.1f", gl.delta); }
@@ -161,7 +161,7 @@ static GlucoseReadingString GetGLChar(GlucoseReading gl, Config config){
 // Draw Glucose screen (includes glucose level, delta and timestamp)
 void UiGlucose(GlucoseReading gl){
     GlucoseReadingString glstr = GetGLChar(gl, UiConfig);
-    bool arrowEnabled = getBooleanValue("trend-arrow", UiConfig);
+    bool arrowEnabled = GetBooleanValue("trend-arrow", UiConfig);
     int glucoseOffset = 0;
     if (glstr.bg.length() <= 3){
         if (arrowEnabled){glucoseOffset = (EPD_2in13_V4_HEIGHT-((Font80.Width*glstr.bg.length())+60))/2;}
@@ -170,11 +170,11 @@ void UiGlucose(GlucoseReading gl){
     // Draw bg
     Paint_DrawString_EN(false, 0+glucoseOffset, (EPD_2in13_V4_WIDTH / 2) - (Font80.Height/2), glstr.bg.c_str(), &Font80, BLACK, WHITE);
     // Draw Delta
-    if (getBooleanValue("delta", UiConfig)){
+    if (GetBooleanValue("delta", UiConfig)){
         Paint_DrawString_EN(true, 215, 105, glstr.delta.c_str(), &Font20, BLACK, WHITE);
     }
     // Draw timestamp
-    if (getBooleanValue("timestamp", UiConfig)){
+    if (GetBooleanValue("timestamp", UiConfig)){
         Paint_DrawString_EN(true, ((glstr.bg.length()*Font80.Width)/2)+glucoseOffset, 105, glstr.time.c_str(), &Font20, BLACK, WHITE);
     }
     // Draw arrow
@@ -187,7 +187,7 @@ void UiGlucose(GlucoseReading gl){
 // Clear Glucose screen (includes glucose level, delta and timestamp) ready for partial update.
 void UiClearGlucose(GlucoseReading gl){
     GlucoseReadingString glstr = GetGLChar(gl, UiConfig);
-    bool arrowEnabled = getBooleanValue("trend-arrow", UiConfig);
+    bool arrowEnabled = GetBooleanValue("trend-arrow", UiConfig);
     int glucoseOffset = 0;
     if (glstr.bg.length() == 3){
         if (arrowEnabled){glucoseOffset = (EPD_2in13_V4_HEIGHT-((Font80.Width*3)+60))/2;}
@@ -196,11 +196,11 @@ void UiClearGlucose(GlucoseReading gl){
     // Draw bg
     UiClearText(false, 0+glucoseOffset, (EPD_2in13_V4_WIDTH / 2) - (Font80.Height/2), glstr.bg.c_str(), &Font80);
     // Draw Delta
-    if (getBooleanValue("delta", UiConfig)){
+    if (GetBooleanValue("delta", UiConfig)){
         UiClearText(true, 215, 105, glstr.delta.c_str(), &Font20);
     }
     // Draw timestamp
-    if (getBooleanValue("timestamp", UiConfig)){
+    if (GetBooleanValue("timestamp", UiConfig)){
         UiClearText(true, ((glstr.bg.length()*Font80.Width)/2)+glucoseOffset, 105, glstr.time.c_str(), &Font20);
     }
     // Draw arrow

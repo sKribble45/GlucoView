@@ -11,14 +11,14 @@ void DrawGlucoseBuffer(GlucoseReading gl, bool glucoseStrikethrough, String warn
     if(glucoseStrikethrough){UiGlucoseStrikethrough();}
     if(warning){UiGlucoseWarning(warning);}
     if(updateNeeded){UiUpdateIcon();}
-    if (getBooleanValue("wifi-icon", UiConfig)){UiWiFiIcon(wifiSignalStrength);}
+    if (GetBooleanValue("wifi-icon", UiConfig)){UiWiFiIcon(wifiSignalStrength);}
 }
 void ClearGlucoseBuffer(GlucoseReading gl, bool glucoseStrikethrough, String warning, bool updateNeeded){
     UiClearGlucose(gl);
     if(glucoseStrikethrough){UiGlucoseClearStrikethrough();}
     if(warning){UiGlucoseClearWarning(warning);}
     if(updateNeeded){UiClearUpdateIcon();}
-    if (getBooleanValue("wifi-icon", UiConfig)){UiClearWiFiIcon();}
+    if (GetBooleanValue("wifi-icon", UiConfig)){UiClearWiFiIcon();}
 }
 
 void DisplayGlucose(GlucoseReading gl, bool glucoseStrikethrough, String warning, bool updateNeeded, int wifiSignalStrength){

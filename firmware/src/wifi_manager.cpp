@@ -120,7 +120,6 @@ bool ConnectToNetwork(String ssid, String password){
     }
 }
 
-
 int GetSignalStrength(){
     int8_t wifiRSSI = WiFi.RSSI();
     if (wifiRSSI < -80){return 0;}
