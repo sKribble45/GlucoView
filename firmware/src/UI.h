@@ -4,7 +4,7 @@
 #include "epaper/GUI_Paint.h"
 #include <stdlib.h>
 #include <Arduino.h>
-#include "dexcom/Dexcom_follow.h"
+#include "glucose/bg_datasource.h"
 #include "config/config_manager.h"
 
 #ifndef __UI_H

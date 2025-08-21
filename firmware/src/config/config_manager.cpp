@@ -16,18 +16,31 @@ const char *SERIAL_NUMBER_KEY = "serialnum";
 
 // Edit this when adding a new configuration value along with the html.
 Config CONFIG_TEMPLATE = {
+    // WiFi:
     {"wifi-ssid", ""},
     {"wifi-password", ""},
+
+    {"data-source", ""},
+
+    // Dexcom:
     {"dex-username", ""},
     {"dex-password", ""},
-    {"mmol-l", true},
     {"ous", true},
+    // Nightscout:
+    {"ns-url", ""},
+    {"ns-secret", ""},
+
+    {"mmol-l", true},
+
+    // Ui Options:
     {"12h-time", false},
     {"trend-arrow", true},
     {"delta", true},
     {"timestamp", true},
     {"rel-timestamp", true},
     {"wifi-icon", true},
+
+    // Update Options:
     {"update-check", true},
     {"auto-update", true},
     {"beta", false}
@@ -121,7 +134,7 @@ void SaveConfig(Config config){
 
     prefs.end();
 }
-unordered_map<string,string> parseQueryString(const string& query) {
+unordered_map<string,string> ParseQueryString(const string& query) {
     unordered_map<string, string> params;
     
     string key, value;
@@ -204,7 +217,7 @@ void HostConfigAP(Config &config,String APssid, String APpassword){
                                 Serial.println(query.c_str());
                                 
                                 // Convert the http request to a unordered map.
-                                unordered_map<string, string> queryParsed = parseQueryString(query);
+                                unordered_map<string, string> queryParsed = ParseQueryString(query);
 
                                 for (auto& p : queryParsed){
                                     Serial.print("[");

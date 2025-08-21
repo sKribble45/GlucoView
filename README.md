@@ -10,7 +10,7 @@ GlucoView is a low power, wall mounted E-paper display made for type one diabeti
 
 ## Features:
 - Uses a web UI and QR codes to make it simple and easy to configure using a smart device.
-- Uses the Dexcom api to get glucose readings directly from Dexcom (Nightscout not yet supported)
+- Has options for dexcom share or nightscout data sources.
 - Displays delta of glucose level on screen to make it easier to judge the rate of change.
 - Uses an epaper screen and deep sleep which allows it to be extremely low power.
 - Uses partial updates on the screen so glucose updates display extremely quick.
@@ -18,7 +18,6 @@ GlucoView is a low power, wall mounted E-paper display made for type one diabeti
 - Mg/dl or Mmol/l option.
 
 ## Future plans
-- Nightscout compatibility.
 - List wifi networks rather than enter ssid manualy.
 - Multiple Ui options including a graph.
 - Battery powered version.
@@ -82,5 +81,4 @@ See [FONT_LICENSES](./FONT_LICENSE.md) for full details.
 
 
 ## Credits:
-- Dexcom Follow Library by [Hynesman](https://github.com/Hynesman/Dexcom_Follow)
 - QR Code Libary by [Richard Moore](https://github.com/ricmoo/QRCode?tab=readme-ov-file)

@@ -1,6 +1,5 @@
 #include <WiFi.h>
 #include <Arduino.h>
-#include "dexcom/Dexcom_follow.h"
 #include <WiFiUdp.h>
 #include <stdlib.h>
 #include "UI.h"
@@ -13,6 +12,7 @@
 #include "update_manager.h"
 #include "epoch_time.h"
 #include "sleep.h"
+#include "glucose/bg_datasource.h"
 using namespace std;
 
 esp_sleep_wakeup_cause_t wakeup_reason;
@@ -35,7 +35,7 @@ const int RETRY_TIMOUT_WIFI_SLEEP = 10;
 const int TIMOUT_WIFI_SLEEP = 30;
 const int NO_WIFI_SLEEP = 5*60;
 const int RETRY_NO_WIFI_SLEEP = 20;
-const int DEXCOM_ERROR_SLEEP = 20;
+const int DS_ERROR_SLEEP = 20;
 
 void NoData(unsigned long currentTime, Config config){
     if (noDataPrev){
@@ -73,34 +73,40 @@ void PrintGlucose(GlucoseReading gl){
     Serial.print(gl.timestamp);
     Serial.print(", Tz adjusted: ");
     Serial.println(gl.tztimestamp);
-    Serial.print("Trend Arrow: ");
-    Serial.println(gl.trend_Symbol);
 }
 
 GlucoseReading GetBG(Config config){
-    Follower follower(GetBooleanValue("ous", config), GetStringValue("dex-username", config), GetStringValue("dex-password", config));
+    GlucoseReading gl;
 
-    if (!follower.getNewSessionID()){
-        // On failure to connect to the dexcom servers display no data.
-        if (dexErrors == 1){
-            DisplayGlucose(prevGl, true, "Dex Error", displayUpdateNeeded, wifiSignalStrength);
+    bool sucess = false;
+    for (int i = 0; i < 2; i++){
+        if (BgDataSourceInit(config)){
+            sucess = true;
+            break;
         }
-        if (dexErrors < 3){dexErrors++;}
-        // if there has been 3 consecutive dexcom errors tell the user that they may want to update their credentials.
-        else{
-            UiFullClear(); 
-            UiWarning("Dex Error", "You may want to consider re-pairing using the pairing button on the left side of the device as this error can be caused by inputing your dexcom credentials incorrectly."); 
-            UiShow();
-        }
-        if (dexErrors == 0){
-            if (!follower.getNewSessionID()){Sleep(DEXCOM_ERROR_SLEEP);}
-        }
-        else{Sleep(DEXCOM_ERROR_SLEEP);}
     }
-    else{dexErrors = 0;}
-    follower.GlucoseLevelsNow();
-
-    GlucoseReading gl = follower.GlucoseNow;
+    if (!sucess){
+        Serial.println("Bg Data source init error");
+        DisplayGlucose(prevGl, true, "DS Error", updateNeeded, wifiSignalStrength);
+        Sleep(DS_ERROR_SLEEP);
+    }
+    
+    // Try twice at getting the reading until giving up and sleeping for a couple seconds.
+    sucess = false;
+    for (int i = 0; i < 2; i++){
+        if (RetrieveGlDataSource()){
+            gl = GlDataSource();
+            sucess = true;
+            break;
+        }
+    }
+    if (!sucess){
+        // DS stands for data source.
+        Serial.println("Bg Data source get error");
+        DisplayGlucose(prevGl, true, "DS Error", updateNeeded, wifiSignalStrength);
+        Sleep(DS_ERROR_SLEEP);
+    }
+    
     PrintGlucose(gl);
 
     return gl;

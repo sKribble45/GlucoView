@@ -152,6 +152,26 @@
         background: #4b5563;
     }
 
+    select {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        margin-bottom: 0.75rem;
+        border: 1px solid var(--border-light);
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        background: var(--card-light);
+        color: var(--text-light);
+        box-sizing: border-box;
+        transition: background 0.3s, border-color 0.3s, color 0.3s;
+    }
+
+    body.dark select {
+        background: var(--border-dark);
+        border-color: var(--border-dark);
+        color: var(--text-dark);
+    }
+
+
     .slider::before {
         content: "";
         position: absolute;
@@ -231,7 +251,7 @@
 </head>
 <body>
 
-    <form class="form-card" id="form-card">
+    <form class="form-card" method="POST" id="form-card">
         <button class="theme-toggle" id="themeToggle">🌙</button>
         <h1>Credential Entry</h1>
 
@@ -248,20 +268,34 @@
 
         <div class="section">
             <div class="section-header">
-                Dexcom Account
+                Data Source
                 <span class="arrow">▶</span>
             </div>
             <div class="section-content">
-                <input type="text" placeholder="Username" name="dex-username" required/>
-                <input type="password" placeholder="Password" name="dex-password" required/>
+                <select id="data-source" name="data-source" required>
+                    <option value="dexcom">Dexcom Share</option>
+                    <option value="nightscout">Nightscout</option>
+                </select>
+
+                <!-- Card for Dexcom -->
+                <div id="dexcom-card" class="card" style="display: none;">
+                    <input type="text" placeholder="Username" name="dex-username"/>
+                    <input type="password" placeholder="Password" name="dex-password"/>
+                    <label class="switch">
+                        <span>Out of US</span>
+                        <input type="checkbox" name="ous"/>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- Card for Nightscout -->
+                <div id="nightscout-card" class="card" style="display: none;">
+                    <input type="text" placeholder="URL" name="ns-url"/>
+                    <input type="password" placeholder="API Secret" name="ns-secret"/>
+                </div>
                 <label class="switch">
-                    <span>MMOL/L</span>
+                    <span>Use Mmol/L</span>
                     <input type="checkbox" name="mmol-l"/>
-                    <span class="slider"></span>
-                </label>
-                <label class="switch">
-                    <span>Out of US</span>
-                    <input type="checkbox" name="ous"/>
                     <span class="slider"></span>
                 </label>
             </div>
@@ -291,11 +325,6 @@
                 <label class="switch">
                     <span>Enable Timestamp</span>
                     <input type="checkbox" name="timestamp"/>
-                    <span class="slider"></span>
-                </label>
-                <label class="switch">
-                    <span>Use Relative Timestamp</span>
-                    <input type="checkbox" name="rel-timestamp"/>
                     <span class="slider"></span>
                 </label>
             </div>
@@ -381,6 +410,25 @@
                 document.getElementById("form-card").appendChild(hidden);
             }
         });
+    });
+    const modeSelect = document.getElementById('data-source');
+    const dexcomCard = document.getElementById('dexcom-card');
+    const nightscoutCard = document.getElementById('nightscout-card');
+    function updateDataSource(){
+        dexcomCard.style.display = modeSelect.value === 'dexcom' ? 'block' : 'none';
+        nightscoutCard.style.display = modeSelect.value === 'nightscout' ? 'block' : 'none';
+
+        document.querySelectorAll('.section').forEach(section => {
+            const content = section.querySelector('.section-content');
+            const isOpen = content.classList.contains('open');
+            if (isOpen) {
+                content.style.maxHeight = content.scrollHeight + 'px';
+            }
+        });
+    }
+    updateDataSource()
+    modeSelect.addEventListener('change', () => {
+        updateDataSource()
     });
 </script>
 

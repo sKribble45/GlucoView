@@ -7,11 +7,11 @@
 #include "UI.h"
 #include <ctime>
 #include "config/config_manager.h"
-#include "dexcom/Dexcom_follow.h"
 #include <string>
 #include "images/arrows.h"
 #include "images/icons.h"
 #include "update_manager.h"
+#include "glucose/bg_datasource.h"
 
 using namespace std;
 
@@ -147,11 +147,11 @@ static GlucoseReadingString GetGLChar(GlucoseReading gl, Config config){
     }
     
     const unsigned char* arrow;
-    if (gl.trend_Symbol == "^" || gl.trend_Symbol == "^^") arrow = ArrowN_bits;
-    else if (gl.trend_Symbol == "/^") arrow = ArrowNE_bits;
-    else if (gl.trend_Symbol == "->") arrow = ArrowE_bits;
-    else if (gl.trend_Symbol == "\\v") arrow = ArrowSE_bits;
-    else if (gl.trend_Symbol == "v" || gl.trend_Symbol == "vv") arrow = ArrowS_bits;
+    if (gl.trend_description == "SingleUp" || gl.trend_description == "DoubleUp") arrow = ArrowN_bits;
+    else if (gl.trend_description == "FortyFiveUp") arrow = ArrowNE_bits;
+    else if (gl.trend_description == "Flat") arrow = ArrowE_bits;
+    else if (gl.trend_description == "FortyFiveDown") arrow = ArrowSE_bits;
+    else if (gl.trend_description == "SingleDown" || gl.trend_description == "DoubleDown") arrow = ArrowS_bits;
     else{arrow = ArrowE_bits;}
     glchr.arrow = arrow;
     

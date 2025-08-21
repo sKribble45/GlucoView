@@ -1,6 +1,6 @@
 #include "UI.h"
 #include "glucose_screen.h"
-#include "dexcom/Dexcom_follow.h"
+#include "glucose/bg_datasource.h"
 
 RTC_DATA_ATTR int partialUpdates = 0;
 const int PARTIAL_UPDATE_LIMIT = 50;
