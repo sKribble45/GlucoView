@@ -12,12 +12,12 @@ using namespace std;
 typedef variant<int, double, String, bool> ConfigValue;
 
 typedef unordered_map<string, ConfigValue> Config;
+extern Config CONFIG_TEMPLATE;
 
 void PrintConfigValues(Config config);
 void LoadConfig(Config &config);
 bool ConfigExists(Config config);
 void SaveConfig(Config config);
-void HostConfigAP(Config &config,String APssid, String APpassword);
 string RandomString(size_t length);
 String GetSerialNumber();
 bool SerialNumberExists();

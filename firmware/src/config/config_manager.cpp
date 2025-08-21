@@ -3,12 +3,13 @@
 #include "config_manager.h"
 #include "config_gui_html.h"
 #include <Preferences.h>
-#include "..\wifi_manager.h"
+#include "wifi_manager.h"
 #include "UI.h"
 #include <vector>
 #include <sstream>
 #include <unordered_map>
 #include "util.h"
+
 using namespace std;
 
 const char *PREFERENCES_KEY = "glucoview";
@@ -133,159 +134,6 @@ void SaveConfig(Config config){
 
 
     prefs.end();
-}
-unordered_map<string,string> ParseQueryString(const string& query) {
-    unordered_map<string, string> params;
-    
-    string key, value;
-    stringstream ss(query);
-    string pair;
-
-    while (getline(ss, pair, '&')) {
-        size_t equal_pos = pair.find('=');
-        if (equal_pos != string::npos) {
-            key = pair.substr(0, equal_pos);
-            value = pair.substr(equal_pos + 1);
-            params[key] = value;
-        }
-    }
-
-    return params;
-}
-
-
-WiFiServer server(80);
-void HostConfigAP(Config &config,String APssid, String APpassword){
-    String httpRequest;
-    bool finishedConfig = false;
-
-    WiFi.softAP(APssid, APpassword, 1, 0, 1);
-    IPAddress IP = WiFi.softAPIP();
-    Serial.print("AP IP address: ");
-    Serial.println(IP);
-    server.begin();
-
-    int connectedClients = 0;
-    int prevConnectedClients = 1;
-
-    while (!finishedConfig){
-        connectedClients = WiFi.softAPgetStationNum();
-        if (connectedClients >= 1 && prevConnectedClients < 1){
-            String link = "http://" + IP.toString() + "/";
-            UiFullClear();
-            UiWebPageConectionPage(link);
-            UiShow();
-        }
-        else if(connectedClients < 1 && prevConnectedClients >= 1){
-            UiFullClear();
-            UiWiFiConectionPage(APssid, APpassword);
-            UiShow();
-        }
-        prevConnectedClients = connectedClients;
-
-        WiFiClient client = server.accept();   // Listen for incoming clients
-
-        if (client) {
-            Serial.println("New Client.");
-            String currentLine = "";
-
-            while (client.connected()) {
-                if (client.available()) {
-                    char c = client.read();
-                    httpRequest += c;
-                    if (c == '\n') {
-                        // if the current line is blank, you got two newline characters in a row.
-                        // that's the end of the client HTTP request, so send a response:
-                        if (currentLine.length() == 0) {
-                            // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
-                            // and a content-type so the client knows what's coming, then a blank line:
-                            client.println("HTTP/1.1 200 OK");
-                            client.println("Content-type:text/html");
-                            client.println("Connection: close");
-                            client.println();
-                            
-                            Serial.println(httpRequest);
-                            int savePostIndex = httpRequest.indexOf("GET /?");
-                            if (savePostIndex >= 0) {
-                                // Get the configuration section of the http request e.g. "foo=bar, blah=on"
-                                string query = httpRequest.c_str();
-                                query = query.substr(savePostIndex + 6);
-                                query = query.substr(0, query.find(' '));
-
-                                // print the query for debugging.
-                                Serial.print("Query: ");
-                                Serial.println(query.c_str());
-                                
-                                // Convert the http request to a unordered map.
-                                unordered_map<string, string> queryParsed = ParseQueryString(query);
-
-                                for (auto& p : queryParsed){
-                                    Serial.print("[");
-                                    Serial.print(p.first.c_str());
-                                    Serial.print(", ");
-                                    Serial.print(p.second.c_str());
-                                    Serial.println("]");
-                                }
-                                
-                                for (pair<string, string> queryEntry : queryParsed){
-                                    // If the name of the query entry e.g. "wifi-ssid" is in the template and what variable type it corosponds to.
-                                    if (CONFIG_TEMPLATE.contains(queryEntry.first)){
-                                        // If its an int, convert the string recieved into a intager. (same thing for the rest)
-                                        if (holds_alternative<int>(CONFIG_TEMPLATE[queryEntry.first])){
-                                            config[queryEntry.first] = stoi(queryEntry.second);
-                                        }
-                                        if (holds_alternative<String>(CONFIG_TEMPLATE[queryEntry.first])){
-                                            String queryStringValue = queryEntry.second.c_str();
-                                            if (queryStringValue != MaskPassword(get<String>(config[queryEntry.first]))){
-                                                config[queryEntry.first] = queryStringValue;
-                                            }
-                                        }
-                                        if (holds_alternative<double>(CONFIG_TEMPLATE[queryEntry.first])){
-                                            config[queryEntry.first] = stod(queryEntry.second);
-                                        }
-                                        if (holds_alternative<bool>(CONFIG_TEMPLATE[queryEntry.first])){
-                                            // A checkbox in html has 2 states (on or off) this converts them into a boolean (true or false)
-                                            bool value;
-                                            if (queryEntry.second == "on"){value = true;}
-                                            else{value = false;}
-                                            config[queryEntry.first] = value;
-                                        }
-                                    }
-                                    
-                                }
-
-                                finishedConfig = true;
-
-                                PrintFinishedHtml(client);
-                            }
-                            else{
-                                PrintMainHtml(client, config);
-                            }
-
-                            
-                            // The HTTP response ends with another blank line
-                            client.println();
-                            // Break out of the while loop
-                            break;
-                        } else { // if you got a newline, then clear currentLine
-                            currentLine = "";
-                        }
-                    } else if (c != '\r') {  // if you got anything else but a carriage return character,
-                        currentLine += c;      // add it to the end of the currentLine
-                    }
-                }
-            }
-            // Clear the httpRequest variable
-            httpRequest = "";
-            // Close the connection
-            client.stop();
-            Serial.println("Client disconnected.");
-            Serial.println("");
-        }
-    }
-    server.end();
-    
-    Serial.println("Configured :)");
 }
 
 String GetStringValue(string key, Config config){

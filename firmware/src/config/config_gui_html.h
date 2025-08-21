@@ -1,6 +1,6 @@
 #include <WiFi.h>
 
-void PrintMainHtml(WiFiClient &client, Config config);
-void PrintFinishedHtml(WiFiClient &client);
+String GetMainHtml(Config config);
+String GetFinishedHtml();
 
 String MaskPassword(String password);

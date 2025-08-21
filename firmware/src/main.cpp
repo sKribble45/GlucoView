@@ -13,6 +13,7 @@
 #include "epoch_time.h"
 #include "sleep.h"
 #include "glucose/bg_datasource.h"
+#include "config/config_ap.h"
 using namespace std;
 
 esp_sleep_wakeup_cause_t wakeup_reason;

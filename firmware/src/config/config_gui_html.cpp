@@ -3,6 +3,467 @@
 
 using namespace std;
 
+String mainHtmlPage = R"rawliteral(
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Configure GlucoView</title>
+<style>
+    :root {
+        --bg-light: #f3f4f6;
+        --bg-dark: #111827;
+        --card-light: #ffffff;
+        --card-dark: #1f2937;
+        --text-light: #1f2937;
+        --text-dark: #f9fafb;
+        --border-light: #d1d5db;
+        --border-dark: #374151;
+        --primary-light: #2563eb;
+        --primary-dark: #3b82f6;
+    }
+
+    body {
+        font-family: sans-serif;
+        background: var(--bg-light);
+        color: var(--text-light);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 1rem;
+        transition: background 0.3s, color 0.3s;
+    }
+
+    body.dark {
+        background: var(--bg-dark);
+        color: var(--text-dark);
+    }
+
+    .form-card {
+        background: var(--card-light);
+        padding: 1.5rem;
+        border-radius: 1rem;
+        max-width: 500px;
+        width: 100%;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        transition: background 0.3s;
+        position: relative;
+    }
+
+    body.dark .form-card {
+        background: var(--card-dark);
+    }
+
+    h1 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .section {
+        margin-bottom: 1rem;
+        border: 1px solid var(--border-light);
+        border-radius: 0.5rem;
+        overflow: hidden;
+        transition: border-color 0.3s;
+    }
+
+    body.dark .section {
+        border-color: var(--border-dark);
+    }
+
+    .section-header {
+        padding: 0.75rem 1rem;
+        font-weight: bold;
+        background: #f9fafb;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background 0.3s;
+    }
+
+    body.dark .section-header {
+        background: #374151;
+    }
+
+    .section-header:hover {
+        background: #e5e7eb;
+    }
+
+    body.dark .section-header:hover {
+        background: #4b5563;
+    }
+
+    .section-content {
+        padding: 0 1rem;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease, padding 0.3s ease;
+    }
+
+    .section-content.open {
+        padding: 1rem;
+    }
+
+    input[type="text"], input[type="password"] {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        margin-bottom: 0.75rem;
+        border: 1px solid var(--border-light);
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        transition: background 0.3s, border-color 0.3s, color 0.3s;
+        box-sizing: border-box;
+    }
+
+    body.dark input[type="text"], 
+    body.dark input[type="password"] {
+        background: var(--border-dark);
+        border-color: var(--border-dark);
+        color: var(--text-dark);
+    }
+
+    .switch {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #f9fafb;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+        transition: background 0.3s;
+    }
+
+    body.dark .switch {
+        background: #374151;
+    }
+
+    .switch input {
+        display: none;
+    }
+
+    .slider {
+        position: relative;
+        width: 44px;
+        height: 24px;
+        background: #d1d5db;
+        border-radius: 9999px;
+        transition: background 0.3s;
+        cursor: pointer;
+    }
+
+    body.dark .slider {
+        background: #4b5563;
+    }
+
+    select {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        margin-bottom: 0.75rem;
+        border: 1px solid var(--border-light);
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        background: var(--card-light);
+        color: var(--text-light);
+        box-sizing: border-box;
+        transition: background 0.3s, border-color 0.3s, color 0.3s;
+    }
+
+    body.dark select {
+        background: var(--border-dark);
+        border-color: var(--border-dark);
+        color: var(--text-dark);
+    }
+
+
+    .slider::before {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 18px;
+        height: 18px;
+        background: white;
+        border-radius: 50%;
+        transition: transform 0.3s;
+    }
+
+    input:checked + .slider {
+        background: var(--primary-light);
+    }
+
+    body.dark input:checked + .slider {
+        background: var(--primary-dark);
+    }
+
+    input:checked + .slider::before {
+        transform: translateX(20px);
+    }
+
+    button.submit {
+        width: 100%;
+        padding: 0.75rem;
+        background: var(--primary-light);
+        border: none;
+        color: white;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+    button.submit:hover {
+        background: #1d4ed8;
+    }
+
+    body.dark button.submit {
+        background: var(--primary-dark);
+    }
+
+    body.dark button.submit:hover {
+        background: #2563eb;
+    }
+
+    .theme-toggle {
+        position: absolute;
+        top: -3.5rem;
+        right: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #e5e7eb;
+        border: none;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: background 0.3s;
+        width: auto;
+    }
+
+    body.dark .theme-toggle {
+        background: #4b5563;
+        color: white;
+    }
+
+    .arrow {
+        transition: transform 0.3s;
+    }
+    .arrow.open {
+        transform: rotate(90deg);
+    }
+</style>
+</head>
+<body>
+
+    <form class="form-card" method="POST" id="form-card" method="POST" action="/save">
+        <button class="theme-toggle" id="themeToggle">🌙</button>
+        <h1>Credential Entry</h1>
+
+        <div class="section">
+            <div class="section-header">
+                WiFi Network
+                <span class="arrow">▶</span>
+            </div>
+            <div class="section-content">
+                <input type="text" placeholder="SSID" name="wifi-ssid" value="%WIFI_SSID%" required/>
+                <input type="password" placeholder="Password" name="wifi-password" value="%WIFI_PASSWORD%" required/>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                Data Source
+                <span class="arrow">▶</span>
+            </div>
+            <div class="section-content">
+                <select id="data-source" name="data-source" required>
+                    <option value="dexcom" %DEXCOM%>Dexcom Share</option>
+                    <option value="nightscout" %NIGHTSCOUT%>Nightscout</option>
+                </select>
+
+                <!-- Card for Dexcom -->
+                <div id="dexcom-card" class="card" style="display: none;">
+                    <input type="text" placeholder="Username" name="dex-username" value="%DEX_USERNAME%"/>
+                    <input type="password" placeholder="Password" name="dex-password" value="%DEX_PASSWORD%"/>
+                    <label class="switch">
+                        <span>Out of US</span>
+                        <input type="checkbox" name="ous" %OUS%/>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- Card for Nightscout -->
+                <div id="nightscout-card" class="card" style="display: none;">
+                    <input type="text" placeholder="URL (http://YOUR-URL/)" name="ns-url"value="%NS_URL%"/>
+                    <input type="password" placeholder="API Secret" name="ns-secret"value="%NS_SECRET%"/>
+                </div>
+                <label class="switch">
+                    <span>Use Mmol/L</span>
+                    <input type="checkbox" name="mmol-l" %MMOL/L%/>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                UI Options
+                <span class="arrow">▶</span>
+            </div>
+            <div class="section-content">
+                <label class="switch">
+                    <span>12H Time</span>
+                    <input type="checkbox" name="12h-time" %12H_TIME%/>
+                    <span class="slider"></span>
+                </label>
+                <label class="switch">
+                    <span>Enable Trend Arrow</span>
+                    <input type="checkbox" name="trend-arrow" %TREND_ARROW%/>
+                    <span class="slider"></span>
+                </label>
+                <label class="switch">
+                    <span>Enable Delta</span>
+                    <input type="checkbox" name="delta" %DELTA%/>
+                    <span class="slider"></span>
+                </label>
+                <label class="switch">
+                    <span>Enable Timestamp</span>
+                    <input type="checkbox" name="timestamp" %TIMESTAMP%/>
+                    <span class="slider"></span>
+                </label>
+                <label class="switch">
+                    <span>Enable Relative Timestamp</span>
+                    <input type="checkbox" name="rel-timestamp" %REL_TIMESTAMP%/>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                Update Options
+                <span class="arrow">▶</span>
+            </div>
+            <div class="section-content">
+                <label class="switch">
+                    <span>Check for updates</span>
+                    <input type="checkbox" name="update-check" %UPDATE_CHECK%/>
+                    <span class="slider"></span>
+                </label>
+                <label class="switch">
+                    <span>Auto Update</span>
+                    <input type="checkbox" name="auto-update" %AUTO_UPDATE%/>
+                    <span class="slider"></span>
+                </label>
+                <label class="switch">
+                    <span>Use Beta Channel <span style="color: red; font-weight: bold;">(EXPEREMENTAL)</span></span>
+                    <input type="checkbox" name="beta" %BETA%/>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <button type="submit" class="submit">Save Configuration</button>
+    </form>
+
+<script>
+    // Dark mode
+    const toggleBtn = document.getElementById('themeToggle');
+    const body = document.body;
+    if (localStorage.theme === 'dark') {
+        body.classList.add('dark');
+        toggleBtn.textContent = '☀️';
+    }
+    toggleBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        body.classList.toggle('dark');
+        if (body.classList.contains('dark')) {
+            localStorage.theme = 'dark';
+            toggleBtn.textContent = '☀️';
+        } else {
+            localStorage.theme = 'light';
+            toggleBtn.textContent = '🌙';
+        }
+    });
+
+    // Collapsible sections
+    document.querySelectorAll('.section').forEach(section => {
+        const header = section.querySelector('.section-header');
+        const content = section.querySelector('.section-content');
+        const arrow = section.querySelector('.arrow');
+        header.addEventListener('click', () => {
+            const isOpen = content.classList.contains('open');
+            if (isOpen) {
+                content.style.maxHeight = null;
+                content.classList.remove('open');
+                arrow.classList.remove('open');
+            } else {
+                content.style.maxHeight = content.scrollHeight + 'px';
+                content.classList.add('open');
+                arrow.classList.add('open');
+            }
+        });
+    });
+    
+    document.getElementById("form-card").addEventListener("submit", function() {
+        const checkboxes = document.querySelectorAll("input[type='checkbox']");
+        
+        checkboxes.forEach(function(checkbox) {
+            const hiddenInput = document.querySelector(`input[name='${checkbox.name}'][type='hidden']`);
+            // If checkbox is unchecked and hidden input doesn't exist, create it
+            if (!checkbox.checked && !hiddenInput) {
+                const hidden = document.createElement("input");
+                hidden.type = "hidden";
+                hidden.name = checkbox.name;
+                hidden.value = "off";
+                document.getElementById("form-card").appendChild(hidden);
+            }
+        });
+    });
+    const modeSelect = document.getElementById('data-source');
+    const dexcomCard = document.getElementById('dexcom-card');
+    const nightscoutCard = document.getElementById('nightscout-card');
+    function updateDataSource(){
+        dexcomCard.style.display = modeSelect.value === 'dexcom' ? 'block' : 'none';
+        nightscoutCard.style.display = modeSelect.value === 'nightscout' ? 'block' : 'none';
+
+        document.querySelectorAll('.section').forEach(section => {
+            const content = section.querySelector('.section-content');
+            const isOpen = content.classList.contains('open');
+            if (isOpen) {
+                content.style.maxHeight = content.scrollHeight + 'px';
+            }
+        });
+    }
+    updateDataSource()
+    modeSelect.addEventListener('change', () => {
+        updateDataSource()
+    });
+</script>
+
+</body>
+</html>
+)rawliteral";
+
+String finishedHtmlPage = R"rawliteral(
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>GlucoView</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="">
+    </head>
+    <body>
+        The configuration is finished, you can now close this page.
+    </body>
+</html>
+)rawliteral";
+
 String CheckboxValue(bool value){
     if (value) {return "checked";}
     else {return "";}
@@ -16,467 +477,43 @@ String MaskPassword(String password){
     return output.c_str();
 }
 
-void PrintMainHtml(WiFiClient &client, Config config){
-    client.println("<!DOCTYPE html>");
-    client.println("<html lang=\"en\">");
-    client.println("<head>");
-    client.println("<meta charset=\"UTF-8\" />");
-    client.println("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />");
-    client.println("<title>Configure GlucoView</title>");
-    client.println("<style>");
-    client.println("    :root {");
-    client.println("        --bg-light: #f3f4f6;");
-    client.println("        --bg-dark: #111827;");
-    client.println("        --card-light: #ffffff;");
-    client.println("        --card-dark: #1f2937;");
-    client.println("        --text-light: #1f2937;");
-    client.println("        --text-dark: #f9fafb;");
-    client.println("        --border-light: #d1d5db;");
-    client.println("        --border-dark: #374151;");
-    client.println("        --primary-light: #2563eb;");
-    client.println("        --primary-dark: #3b82f6;");
-    client.println("    }");
-    client.println("");
-    client.println("    body {");
-    client.println("        font-family: sans-serif;");
-    client.println("        background: var(--bg-light);");
-    client.println("        color: var(--text-light);");
-    client.println("        display: flex;");
-    client.println("        justify-content: center;");
-    client.println("        align-items: center;");
-    client.println("        min-height: 100vh;");
-    client.println("        padding: 1rem;");
-    client.println("        transition: background 0.3s, color 0.3s;");
-    client.println("    }");
-    client.println("");
-    client.println("    body.dark {");
-    client.println("        background: var(--bg-dark);");
-    client.println("        color: var(--text-dark);");
-    client.println("    }");
-    client.println("");
-    client.println("    .form-card {");
-    client.println("        background: var(--card-light);");
-    client.println("        padding: 1.5rem;");
-    client.println("        border-radius: 1rem;");
-    client.println("        max-width: 500px;");
-    client.println("        width: 100%;");
-    client.println("        box-shadow: 0 4px 20px rgba(0,0,0,0.1);");
-    client.println("        transition: background 0.3s;");
-    client.println("        position: relative;");
-    client.println("    }");
-    client.println("");
-    client.println("    body.dark .form-card {");
-    client.println("        background: var(--card-dark);");
-    client.println("    }");
-    client.println("");
-    client.println("    h1 {");
-    client.println("        font-size: 1.5rem;");
-    client.println("        margin-bottom: 1rem;");
-    client.println("    }");
-    client.println("");
-    client.println("    .section {");
-    client.println("        margin-bottom: 1rem;");
-    client.println("        border: 1px solid var(--border-light);");
-    client.println("        border-radius: 0.5rem;");
-    client.println("        overflow: hidden;");
-    client.println("        transition: border-color 0.3s;");
-    client.println("    }");
-    client.println("");
-    client.println("    body.dark .section {");
-    client.println("        border-color: var(--border-dark);");
-    client.println("    }");
-    client.println("");
-    client.println("    .section-header {");
-    client.println("        padding: 0.75rem 1rem;");
-    client.println("        font-weight: bold;");
-    client.println("        background: #f9fafb;");
-    client.println("        cursor: pointer;");
-    client.println("        display: flex;");
-    client.println("        justify-content: space-between;");
-    client.println("        align-items: center;");
-    client.println("        transition: background 0.3s;");
-    client.println("    }");
-    client.println("");
-    client.println("    body.dark .section-header {");
-    client.println("        background: #374151;");
-    client.println("    }");
-    client.println("");
-    client.println("    .section-header:hover {");
-    client.println("        background: #e5e7eb;");
-    client.println("    }");
-    client.println("");
-    client.println("    body.dark .section-header:hover {");
-    client.println("        background: #4b5563;");
-    client.println("    }");
-    client.println("");
-    client.println("    .section-content {");
-    client.println("        padding: 0 1rem;");
-    client.println("        max-height: 0;");
-    client.println("        overflow: hidden;");
-    client.println("        transition: max-height 0.4s ease, padding 0.3s ease;");
-    client.println("    }");
-    client.println("");
-    client.println("    .section-content.open {");
-    client.println("        padding: 1rem;");
-    client.println("    }");
-    client.println("");
-    client.println("    input[type=\"text\"], input[type=\"password\"] {");
-    client.println("        width: 100%;");
-    client.println("        padding: 0.6rem 0.75rem;");
-    client.println("        margin-bottom: 0.75rem;");
-    client.println("        border: 1px solid var(--border-light);");
-    client.println("        border-radius: 0.5rem;");
-    client.println("        font-size: 1rem;");
-    client.println("        transition: background 0.3s, border-color 0.3s, color 0.3s;");
-    client.println("        box-sizing: border-box;");
-    client.println("    }");
-    client.println("");
-    client.println("    body.dark input[type=\"text\"],");
-    client.println("    body.dark input[type=\"password\"] {");
-    client.println("        background: var(--border-dark);");
-    client.println("        border-color: var(--border-dark);");
-    client.println("        color: var(--text-dark);");
-    client.println("    }");
-    client.println("");
-    client.println("    .switch {");
-    client.println("        display: flex;");
-    client.println("        justify-content: space-between;");
-    client.println("        align-items: center;");
-    client.println("        background: #f9fafb;");
-    client.println("        padding: 0.5rem 0.75rem;");
-    client.println("        border-radius: 0.5rem;");
-    client.println("        margin-bottom: 0.5rem;");
-    client.println("        transition: background 0.3s;");
-    client.println("    }");
-    client.println("");
-    client.println("    body.dark .switch {");
-    client.println("        background: #374151;");
-    client.println("    }");
-    client.println("");
-    client.println("    .switch input {");
-    client.println("        display: none;");
-    client.println("    }");
-    client.println("");
-    client.println("    .slider {");
-    client.println("        position: relative;");
-    client.println("        width: 44px;");
-    client.println("        height: 24px;");
-    client.println("        background: #d1d5db;");
-    client.println("        border-radius: 9999px;");
-    client.println("        transition: background 0.3s;");
-    client.println("        cursor: pointer;");
-    client.println("    }");
-    client.println("");
-    client.println("    body.dark .slider {");
-    client.println("        background: #4b5563;");
-    client.println("    }");
-    client.println("");
-    client.println("    .slider::before {");
-    client.println("        content: \"\";");
-    client.println("        position: absolute;");
-    client.println("        top: 3px;");
-    client.println("        left: 3px;");
-    client.println("        width: 18px;");
-    client.println("        height: 18px;");
-    client.println("        background: white;");
-    client.println("        border-radius: 50%;");
-    client.println("        transition: transform 0.3s;");
-    client.println("    }");
-    client.println("");
-    client.println("    input:checked + .slider {");
-    client.println("        background: var(--primary-light);");
-    client.println("    }");
-    client.println("");
-    client.println("    body.dark input:checked + .slider {");
-    client.println("        background: var(--primary-dark);");
-    client.println("    }");
-    client.println("");
-    client.println("    input:checked + .slider::before {");
-    client.println("        transform: translateX(20px);");
-    client.println("    }");
-    client.println("");
-    client.println("    select {");
-    client.println("        width: 100%;");
-    client.println("        padding: 0.6rem 0.75rem;");
-    client.println("        margin-bottom: 0.75rem;");
-    client.println("        border: 1px solid var(--border-light);");
-    client.println("        border-radius: 0.5rem;");
-    client.println("        font-size: 1rem;");
-    client.println("        background: var(--card-light);");
-    client.println("        color: var(--text-light);");
-    client.println("        box-sizing: border-box;");
-    client.println("        transition: background 0.3s, border-color 0.3s, color 0.3s;");
-    client.println("    }");
-    client.println("");
-    client.println("    body.dark select {");
-    client.println("        background: var(--border-dark);");
-    client.println("        border-color: var(--border-dark);");
-    client.println("        color: var(--text-dark);");
-    client.println("    }");
-    client.println("");
-    client.println("    button.submit {");
-    client.println("        width: 100%;");
-    client.println("        padding: 0.75rem;");
-    client.println("        background: var(--primary-light);");
-    client.println("        border: none;");
-    client.println("        color: white;");
-    client.println("        border-radius: 0.5rem;");
-    client.println("        font-size: 1rem;");
-    client.println("        cursor: pointer;");
-    client.println("        transition: background 0.3s;");
-    client.println("    }");
-    client.println("");
-    client.println("    button.submit:hover {");
-    client.println("        background: #1d4ed8;");
-    client.println("    }");
-    client.println("");
-    client.println("    body.dark button.submit {");
-    client.println("        background: var(--primary-dark);");
-    client.println("    }");
-    client.println("");
-    client.println("    body.dark button.submit:hover {");
-    client.println("        background: #2563eb;");
-    client.println("    }");
-    client.println("");
-    client.println("    .theme-toggle {");
-    client.println("        position: absolute;");
-    client.println("        top: -3.5rem;");
-    client.println("        right: 0;");
-    client.println("        display: inline-flex;");
-    client.println("        align-items: center;");
-    client.println("        justify-content: center;");
-    client.println("        background: #e5e7eb;");
-    client.println("        border: none;");
-    client.println("        padding: 0.5rem;");
-    client.println("        border-radius: 0.5rem;");
-    client.println("        cursor: pointer;");
-    client.println("        transition: background 0.3s;");
-    client.println("        width: auto;");
-    client.println("    }");
-    client.println("");
-    client.println("    body.dark .theme-toggle {");
-    client.println("        background: #4b5563;");
-    client.println("        color: white;");
-    client.println("    }");
-    client.println("");
-    client.println("    .arrow {");
-    client.println("        transition: transform 0.3s;");
-    client.println("    }");
-    client.println("    .arrow.open {");
-    client.println("        transform: rotate(90deg);");
-    client.println("    }");
-    client.println("</style>");
-    client.println("</head>");
-    client.println("<body>");
-    client.println("");
-    client.println("    <form class=\"form-card\" id=\"form-card\">");
-    client.println("        <button class=\"theme-toggle\" id=\"themeToggle\">🌙</button>");
-    client.println("        <h1>Credential Entry</h1>");
-    client.println("");
-    client.println("        <div class=\"section\">");
-    client.println("            <div class=\"section-header\">");
-    client.println("                WiFi Network");
-    client.println("                <span class=\"arrow\">▶</span>");
-    client.println("            </div>");
-    client.println("            <div class=\"section-content\">");
-    client.println("                <input type=\"text\" placeholder=\"SSID\" name=\"wifi-ssid\" value=\""+GetStringValue("wifi-ssid", config)+"\" required/>");
-    client.println("                <input type=\"password\" placeholder=\"Password\" name=\"wifi-password\" value=\""+MaskPassword(GetStringValue("wifi-password", config))+"\" required/>");
-    client.println("            </div>");
-    client.println("        </div>");
-    client.println("");
-    client.println("        <div class=\"section\">");
-    client.println("            <div class=\"section-header\">");
-    client.println("                Data Source");
-    client.println("                <span class=\"arrow\">▶</span>");
-    client.println("            </div>");
-    client.println("            <div class=\"section-content\">");
-    client.println("                <select id=\"data-source\" name=\"data-source\" required>");
-    client.println("                    <option value=\"dexcom\">Dexcom Share</option>");
-    client.println("                    <option value=\"nightscout\">Nightscout</option>");
-    client.println("                </select>");
-    client.println("");
-    client.println("                <!-- Card for Dexcom -->");
-    client.println("                <div id=\"dexcom-card\" class=\"card\" style=\"display: none;\">");
-    client.println("                    <input type=\"text\" placeholder=\"Username\" name=\"dex-username\" value=\""+GetStringValue("dex-username", config)+"\"/>");
-    client.println("                    <input type=\"password\" placeholder=\"Password\" name=\"dex-password\" value=\""+MaskPassword(GetStringValue("dex-password", config))+"\"/>");
-    client.println("                    <label class=\"switch\">");
-    client.println("                        <span>Out of US</span>");
-    client.println("                        <input type=\"checkbox\" name=\"ous\" "+CheckboxValue(GetBooleanValue("ous", config))+"/>");
-    client.println("                        <span class=\"slider\"></span>");
-    client.println("                    </label>");
-    client.println("                </div>");
-    client.println("");
-    client.println("                <!-- Card for Nightscout -->");
-    client.println("                <div id=\"nightscout-card\" class=\"card\" style=\"display: none;\">");
-    client.println("                    <input type=\"text\" placeholder=\"URL (http://YOUR-URL/)\" name=\"ns-url\" value=\""+GetStringValue("ns-url", config)+"\"/>");
-    client.println("                    <input type=\"password\" placeholder=\"API Secret\" name=\"ns-secret\" value=\""+GetStringValue("ns-secret", config)+"\"/>");
-    client.println("                </div>");
-    client.println("                <label class=\"switch\">");
-    client.println("                    <span>Use Mmol/L</span>");
-    client.println("                    <input type=\"checkbox\" name=\"mmol-l\" "+CheckboxValue(GetBooleanValue("mmol-l", config))+"/>");
-    client.println("                    <span class=\"slider\"></span>");
-    client.println("                </label>");
-    client.println("            </div>");
-    client.println("        </div>");
-    client.println("");
-    client.println("        <div class=\"section\">");
-    client.println("            <div class=\"section-header\">");
-    client.println("                UI Options");
-    client.println("                <span class=\"arrow\">▶</span>");
-    client.println("            </div>");
-    client.println("            <div class=\"section-content\">");
-    client.println("                <label class=\"switch\">");
-    client.println("                    <span>12H Time</span>");
-    client.println("                    <input type=\"checkbox\" name=\"12h-time\" "+CheckboxValue(GetBooleanValue("12h-time", config))+"/>");
-    client.println("                    <span class=\"slider\"></span>");
-    client.println("                </label>");
-    client.println("                <label class=\"switch\">");
-    client.println("                    <span>Enable Trend Arrow</span>");
-    client.println("                    <input type=\"checkbox\" name=\"trend-arrow\" "+CheckboxValue(GetBooleanValue("trend-arrow", config))+"/>");
-    client.println("                    <span class=\"slider\"></span>");
-    client.println("                </label>");
-    client.println("                <label class=\"switch\">");
-    client.println("                    <span>Enable Delta</span>");
-    client.println("                    <input type=\"checkbox\" name=\"delta\" "+CheckboxValue(GetBooleanValue("delta", config))+"/>");
-    client.println("                    <span class=\"slider\"></span>");
-    client.println("                </label>");
-    client.println("                <label class=\"switch\">");
-    client.println("                    <span>Enable Timestamp</span>");
-    client.println("                    <input type=\"checkbox\" name=\"timestamp\" "+CheckboxValue(GetBooleanValue("timestamp", config))+"/>");
-    client.println("                    <span class=\"slider\"></span>");
-    client.println("                </label>");
-    client.println("                <label class=\"switch\">");
-    client.println("                    <span>Enable Wifi Icon</span>");
-    client.println("                    <input type=\"checkbox\" name=\"wifi-icon\" "+CheckboxValue(GetBooleanValue("wifi-icon", config))+"/>");
-    client.println("                    <span class=\"slider\"></span>");
-    client.println("                </label>");
-    client.println("                <label class=\"switch\">");
-    client.println("                    <span>Use Relative Timestamp</span>");
-    client.println("                    <input type=\"checkbox\" name=\"rel-timestamp\" "+CheckboxValue(GetBooleanValue("rel-timestamp", config))+"/>");
-    client.println("                    <span class=\"slider\"></span>");
-    client.println("                </label>");
-    client.println("            </div>");
-    client.println("        </div>");
-    client.println("");
-    client.println("        <div class=\"section\">");
-    client.println("            <div class=\"section-header\">");
-    client.println("                Update Options");
-    client.println("                <span class=\"arrow\">▶</span>");
-    client.println("            </div>");
-    client.println("            <div class=\"section-content\">");
-    client.println("                <label class=\"switch\">");
-    client.println("                    <span>Check for updates</span>");
-    client.println("                    <input type=\"checkbox\" name=\"update-check\"/ "+CheckboxValue(GetBooleanValue("update-check", config))+">");
-    client.println("                    <span class=\"slider\"></span>");
-    client.println("                </label>");
-    client.println("                <label class=\"switch\">");
-    client.println("                    <span>Auto Update</span>");
-    client.println("                    <input type=\"checkbox\" name=\"auto-update\"/ "+CheckboxValue(GetBooleanValue("auto-update", config))+">");
-    client.println("                    <span class=\"slider\"></span>");
-    client.println("                </label>");
-    client.println("                <label class=\"switch\">");
-    client.println("                    <span>Use Beta <span style=\"color: red; font-weight: bold;\">(EXPEREMENTAL)</span></span>");
-    client.println("                    <input type=\"checkbox\" name=\"beta\" "+CheckboxValue(GetBooleanValue("beta", config))+"/>");
-    client.println("                    <span class=\"slider\"></span>");
-    client.println("                </label>");
-    client.println("            </div>");
-    client.println("        </div>");
-    client.println("");
-    client.println("        <button type=\"submit\" class=\"submit\">Save Configuration</button>");
-    client.println("    </form>");
-    client.println("");
-    client.println("<script>");
-    client.println("    // Dark mode");
-    client.println("    const toggleBtn = document.getElementById('themeToggle');");
-    client.println("    const body = document.body;");
-    client.println("    if (localStorage.theme === 'dark') {");
-    client.println("        body.classList.add('dark');");
-    client.println("        toggleBtn.textContent = '☀️';");
-    client.println("    }");
-    client.println("    toggleBtn.addEventListener('click', (e) => {");
-    client.println("        e.preventDefault();");
-    client.println("        body.classList.toggle('dark');");
-    client.println("        if (body.classList.contains('dark')) {");
-    client.println("            localStorage.theme = 'dark';");
-    client.println("            toggleBtn.textContent = '☀️';");
-    client.println("        } else {");
-    client.println("            localStorage.theme = 'light';");
-    client.println("            toggleBtn.textContent = '🌙';");
-    client.println("        }");
-    client.println("    });");
-    client.println("");
-    client.println("    // Collapsible sections");
-    client.println("    document.querySelectorAll('.section').forEach(section => {");
-    client.println("        const header = section.querySelector('.section-header');");
-    client.println("        const content = section.querySelector('.section-content');");
-    client.println("        const arrow = section.querySelector('.arrow');");
-    client.println("        header.addEventListener('click', () => {");
-    client.println("            const isOpen = content.classList.contains('open');");
-    client.println("            if (isOpen) {");
-    client.println("                content.style.maxHeight = null;");
-    client.println("                content.classList.remove('open');");
-    client.println("                arrow.classList.remove('open');");
-    client.println("            } else {");
-    client.println("                content.style.maxHeight = content.scrollHeight + 'px';");
-    client.println("                content.classList.add('open');");
-    client.println("                arrow.classList.add('open');");
-    client.println("            }");
-    client.println("        });");
-    client.println("    });");
-    client.println("");
-    client.println("    document.getElementById(\"form-card\").addEventListener(\"submit\", function() {");
-    client.println("        const checkboxes = document.querySelectorAll(\"input[type='checkbox']\");");
-    client.println("");
-    client.println("        checkboxes.forEach(function(checkbox) {");
-    client.println("            const hiddenInput = document.querySelector(`input[name='${checkbox.name}'][type='hidden']`);");
-    client.println("            // If checkbox is unchecked and hidden input doesn't exist, create it");
-    client.println("            if (!checkbox.checked && !hiddenInput) {");
-    client.println("                const hidden = document.createElement(\"input\");");
-    client.println("                hidden.type = \"hidden\";");
-    client.println("                hidden.name = checkbox.name;");
-    client.println("                hidden.value = \"off\";");
-    client.println("                document.getElementById(\"form-card\").appendChild(hidden);");
-    client.println("            }");
-    client.println("        });");
-    client.println("    });");
-    client.println("    const modeSelect = document.getElementById('data-source');");
-    client.println("    const dexcomCard = document.getElementById('dexcom-card');");
-    client.println("    const nightscoutCard = document.getElementById('nightscout-card');");
-    client.println("    function updateDataSource(){");
-    client.println("        dexcomCard.style.display = modeSelect.value === 'dexcom' ? 'block' : 'none';");
-    client.println("        nightscoutCard.style.display = modeSelect.value === 'nightscout' ? 'block' : 'none';");
-    client.println("");
-    client.println("        document.querySelectorAll('.section').forEach(section => {");
-    client.println("            const content = section.querySelector('.section-content');");
-    client.println("            const isOpen = content.classList.contains('open');");
-    client.println("            if (isOpen) {");
-    client.println("                content.style.maxHeight = content.scrollHeight + 'px';");
-    client.println("            }");
-    client.println("        });");
-    client.println("    }");
-    client.println("    updateDataSource()");
-    client.println("    modeSelect.addEventListener('change', () => {");
-    client.println("        updateDataSource()");
-    client.println("    });");
-    client.println("</script>");
-    client.println("");
-    client.println("</body>");
-    client.println("</html>");
-}
+String GetMainHtml(Config config){
+    String html = mainHtmlPage;
+    // WiFi
+    html.replace("\%WIFI_SSID%", GetStringValue("wifi-ssid", config));
+    html.replace("\%WIFI_PASSWORD%", MaskPassword(GetStringValue("wifi-password", config)));
+    // Dexcom
+    html.replace("\%DEX_USERNAME%", GetStringValue("dex-username", config));
+    html.replace("\%DEX_PASSWORD%", MaskPassword(GetStringValue("dex-password", config)));
+    html.replace("\%OUS%", CheckboxValue(GetBooleanValue("ous", config)));
+    // Nightscout
+    html.replace("\%NS_URL%", GetStringValue("ns-url", config));
+    html.replace("\%NS_SECRET%", MaskPassword(GetStringValue("ns-secret", config)));
 
-void PrintFinishedHtml(WiFiClient &client){
-    client.println("<!DOCTYPE html>");
-    client.println("<html>");
-    client.println("    <head>");
-    client.println("        <meta charset=\"utf-8\">");
-    client.println("        <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">");
-    client.println("        <title>GlucoView</title>");
-    client.println("        <meta name=\"description\" content=\"\">");
-    client.println("        <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
-    client.println("        <link rel=\"stylesheet\" href=\"\">");
-    client.println("    </head>");
-    client.println("    <body>");
-    client.println("        The configuration is finished, you can now close this page.");
-    client.println("    </body>");
-    client.println("</html>");
+    html.replace("\%MMOL/L%", CheckboxValue(GetBooleanValue("mmol-l", config)));
+
+    // Dexcom
+    if (GetStringValue("data-source", config) == "dexcom"){html.replace("\%DEXCOM%", "selected");}
+    else{html.replace("\%DEXCOM%", "");}
+    // Nightscout
+    if (GetStringValue("data-source", config) == "nightscout"){html.replace("\%NIGHTSCOUT%", "selected");}
+    else{html.replace("\%NIGHTSCOUT%", "");}
+    
+    // Ui Options
+    html.replace("\%TREND_ARROW%",  GetStringValue("trend-arrow", config));
+    html.replace("\%DELTA%", GetStringValue("delta", config));
+    html.replace("\%12H_TIME%", GetStringValue("12h-time", config));
+    html.replace("\%TIMESTAMP%", GetStringValue("timestamp", config));
+    html.replace("\%REL_TIMESTAMP%", GetStringValue("rel-timestamp", config));
+
+    // Update Options
+    html.replace("\%UPDATE_CHECK%", GetStringValue("update-check", config));
+    html.replace("\%AUTO_UPDATE%", GetStringValue("auto-update", config));
+    html.replace("\%BETA%", GetStringValue("beta", config));
+
+    return html;
+} 
+
+String GetFinishedHtml(){
+    return finishedHtmlPage;
 }

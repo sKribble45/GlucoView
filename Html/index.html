@@ -251,7 +251,7 @@
 </head>
 <body>
 
-    <form class="form-card" method="POST" id="form-card">
+    <form class="form-card" method="POST" id="form-card" action="/save">
         <button class="theme-toggle" id="themeToggle">🌙</button>
         <h1>Credential Entry</h1>
 
@@ -327,6 +327,11 @@
                     <input type="checkbox" name="timestamp"/>
                     <span class="slider"></span>
                 </label>
+                <label class="switch">
+                    <span>Enable Relative Timestamp</span>
+                    <input type="checkbox" name="rel-timestamp"/>
+                    <span class="slider"></span>
+                </label>
             </div>
         </div>
 
@@ -363,17 +368,17 @@
     const body = document.body;
     if (localStorage.theme === 'dark') {
         body.classList.add('dark');
-        toggleBtn.textContent = 'L';
+        toggleBtn.textContent = '☀️';
     }
     toggleBtn.addEventListener('click', (e) => {
         e.preventDefault();
         body.classList.toggle('dark');
         if (body.classList.contains('dark')) {
             localStorage.theme = 'dark';
-            toggleBtn.textContent = 'L';
+            toggleBtn.textContent = '☀️';
         } else {
             localStorage.theme = 'light';
-            toggleBtn.textContent = 'D';
+            toggleBtn.textContent = '🌙';
         }
     });
 
