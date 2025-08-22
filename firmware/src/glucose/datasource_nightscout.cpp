@@ -48,7 +48,7 @@ GlucoseReading GetBgFromNightscout(){
         gl.bg = MgdlToMmol(json[0]["sgv"].as<int>());
         gl.delta = MgdlToMmol(round(json[0]["delta"].as<double>()));
         string dtStr = json[0]["date"].as<string>();
-        gl.timestamp = stoi(dtStr.substr(0, dtStr.length()-3));
+        gl.timestamp = stoi(dtStr.substr(0, dtStr.length()-3)); // Take off the miliseconds from the timestamp.
         gl.tztimestamp = gl.timestamp + (json[0]["utcOffset"].as<int>()*60);
         gl.trend_description = json[0]["direction"].as<String>();
         gl.failed = false;
