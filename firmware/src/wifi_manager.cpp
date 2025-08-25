@@ -37,56 +37,7 @@ bool SavedNetworkExists(WifiNetwork network){
     return false;
 }
 
-WifiNetwork GetSavedNetwork(list<WifiNetwork> saved_networks){
-    WiFi.disconnect();
-    // Scan for networks.
-    Serial.println("Scanning for networks...");
-    int foundNetworks = WiFi.scanNetworks();
-    Serial.println("Finished scanning.");
-    // if there are no networks found display no wifi and sleep.
-    if (foundNetworks == 0){
-        Serial.println("No wifi networks found :(");
-        return {"",""};
-    }
-
-    bool savedNetworkExists = false;
-    WifiNetwork network = {"", ""};
-
-
-    Serial.println("Networks Found:");
-    for (int scannedNetworkIndex = 0; scannedNetworkIndex < foundNetworks; scannedNetworkIndex++){
-        String scanned_network_ssid = WiFi.SSID(scannedNetworkIndex); // get the ssid from the index of a network that has has been scanned
-        
-        Serial.print(" -");
-        Serial.print(scanned_network_ssid);
-        Serial.print(" ");
-        Serial.println(WiFi.RSSI(scannedNetworkIndex));
-
-        for (WifiNetwork saved_network : saved_networks){
-            // nicer variable names cuz i feel like it.
-            String ssid = saved_network.ssid;
-            String pass = saved_network.password;
-            // if the ssid from one of the saved networks equals one of the scanned networks then return it.
-            if (ssid == scanned_network_ssid){
-                savedNetworkExists = true;
-                network.ssid = scanned_network_ssid;
-                network.password = pass;
-                break;
-            }
-        }
-        if (savedNetworkExists){
-            Serial.print("Found saved network: ");
-            Serial.println(network.ssid);
-            break;
-        }
-    }
-    WiFi.scanDelete();
-    return network;
-    
-}
-
 bool ConnectToNetwork(String ssid, String password){
-    
     // connect to the found wifi network.
     // set wifi mode to station.
     WiFi.mode(WIFI_STA); 
