@@ -88,9 +88,9 @@ GlucoseReading GetBgFromDexcom(){
         gl.delta = MgdlToMmol(gl.mgdlDelta);
 
         
-        gl.trend_description = json[0]["Trend"].as<String>();
+        json[0]["Trend"].as<String>().toCharArray(gl.trendDescription, sizeof(gl.trendDescription));
         Serial.print("Trend: ");
-        Serial.println(gl.trend_description);
+        Serial.println(gl.trendDescription);
 
         string dtUnfiltered = json[0]["DT"].as<string>();
         Serial.println(dtUnfiltered.c_str());

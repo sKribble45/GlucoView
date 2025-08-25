@@ -5,7 +5,7 @@
 typedef struct{
     GlucoseReading gl;
     bool glucoseStrikethrough;
-    String warning;
+    char warning[10];
     bool updateNeeded;
     int wifiSignalStrength;
 } GlucoseScreen;

@@ -55,3 +55,20 @@ bool RetrieveGlDataSource(){
 GlucoseReading GlDataSource(){
     return gl;
 }
+
+void PrintGlucose(GlucoseReading gl){
+    Serial.print("MMOL/L: ");
+    Serial.println(gl.bg);
+    Serial.print("MMOL/L Delta: ");
+    Serial.println(gl.delta);
+    Serial.print("MG/DL: ");
+    Serial.println(gl.mgdl);
+    Serial.print("MG/DL Delta: ");
+    Serial.println(gl.mgdlDelta);
+    Serial.print("Glucose Timestamp: ");
+    Serial.print(gl.timestamp);
+    Serial.print(", Tz adjusted: ");
+    Serial.println(gl.tztimestamp);
+    Serial.print("Trend: ");
+    Serial.println(gl.trendDescription);
+}

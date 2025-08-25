@@ -21,17 +21,18 @@ RTC_DATA_ATTR GlucoseReading prevGl;
 
 RTC_DATA_ATTR bool noDataPrev = false;
 RTC_DATA_ATTR bool wifiTimoutPrev = false;
-RTC_DATA_ATTR int wakeupTime = 0;
 RTC_DATA_ATTR bool noWifiPrev = false;
 RTC_DATA_ATTR int dexErrors = 0;
 RTC_DATA_ATTR bool displayUpdateNeeded = false;
 
 RTC_DATA_ATTR int wifiSignalStrength = 0;
 
+time_t rtcTime;
+
 // Sleep times.
 const int NO_TIME_SLEEP = 5;
 const int NO_DATA_SLEEP = 5*60;
-const int RETRY_NO_DATA_SLEEP = 10;
+const int RETRY_NO_DATA_SLEEP = 15;
 const int RETRY_TIMOUT_WIFI_SLEEP = 10;
 const int TIMOUT_WIFI_SLEEP = 30;
 const int NO_WIFI_SLEEP = 5*60;
@@ -44,36 +45,19 @@ void NoData(unsigned long currentTime, Config config){
         DisplayGlucose(prevGl, true, "No Data", displayUpdateNeeded, wifiSignalStrength);
         if (!
             GetBooleanValue("rel-timestamp", config)){
-            wakeupTime = currentTime + NO_DATA_SLEEP;
             Sleep(NO_DATA_SLEEP);
         }
         else{
-            wakeupTime = currentTime + 60;
             Sleep(60);
         }
     }
     else{
         noDataPrev = true;
         Serial.print("No new reading yet.");
-        wakeupTime = currentTime + RETRY_NO_DATA_SLEEP;
+        DisplayGlucose(prevGl, true, "No Data", displayUpdateNeeded, wifiSignalStrength);
         Sleep(RETRY_NO_DATA_SLEEP);
     }
     
-}
-
-void PrintGlucose(GlucoseReading gl){
-    Serial.print("MMOL/L: ");
-    Serial.println(gl.bg);
-    Serial.print("MMOL/L Delta: ");
-    Serial.println(gl.delta);
-    Serial.print("MG/DL: ");
-    Serial.println(gl.mgdl);
-    Serial.print("MG/DL Delta: ");
-    Serial.println(gl.mgdlDelta);
-    Serial.print("Glucose Timestamp: ");
-    Serial.print(gl.timestamp);
-    Serial.print(", Tz adjusted: ");
-    Serial.println(gl.tztimestamp);
 }
 
 GlucoseReading GetBG(Config config){
@@ -108,16 +92,14 @@ GlucoseReading GetBG(Config config){
         Sleep(DS_ERROR_SLEEP);
     }
     
-    PrintGlucose(gl);
-
     return gl;
 }
 
-bool UpdateBg(){
+bool UpdateBg(unsigned long rtcTime){
     bool updateBg;
-    int minsSinceLastReading = round((double)((wakeupTime - prevGl.timestamp)/60));
+    int minsSinceLastReading = round((double)((rtcTime - prevGl.timestamp)/60));
     updateBg = (
-        (wakeupTime - prevGl.timestamp > 5*60 -2) && !noDataPrev) || 
+        (rtcTime - prevGl.timestamp > 5*60 -2) && !noDataPrev) || 
         (((double)minsSinceLastReading/5 == floor((double)minsSinceLastReading/5)) && noDataPrev
     );
     return updateBg;
@@ -125,18 +107,18 @@ bool UpdateBg(){
 
 void UpdateDisplay(Config config){
     // Get the current epoch time.
-    unsigned long currentTime = wakeupTime;
+    unsigned long currentTime = rtcTime;
 
     // Get the blood glucose reading from dexcom.
     GlucoseReading gl = prevGl;
-    if (UpdateBg() || prevGl.bg == 0.0 || wakeupTime == 0){
+    if (UpdateBg(currentTime) || prevGl.bg == 0.0 || rtcTime <= 10){
         currentTime = GetEpoch();
         if (currentTime == 0){
-            if (wakeupTime > 0){
+            if (rtcTime > 0){
                 Serial.println("Timeclient not updating, using old timestamp + the time it slept (less accurate)");
                 // calculate the previous wakeup time + the time it slept 
                 // This is less accurate because it could be doing things in between that take a few seconds
-                currentTime = wakeupTime;
+                currentTime = rtcTime;
             }
             else{
                 Serial.println("No previous time data.");
@@ -148,9 +130,10 @@ void UpdateDisplay(Config config){
         gl.minsSinceReading = round((currentTime - gl.timestamp) / 60);
     }
     else{
-        gl.minsSinceReading = round((wakeupTime - gl.timestamp) / 60);
+        gl.minsSinceReading = round((rtcTime - gl.timestamp) / 60);
     }
     prevGl = gl;
+    
 
     if (GetBooleanValue("update-check", config)){
         displayUpdateNeeded = CheckForUpdate();
@@ -170,22 +153,22 @@ void UpdateDisplay(Config config){
     
     if(timeUntilNewReading < 0){NoData(currentTime, config);}
     else {
+
+        PrintGlucose(gl);
         DisplayGlucose(gl, false, "", displayUpdateNeeded, wifiSignalStrength);
+        
         if (GetBooleanValue("rel-timestamp", config)){
             // Work out how long to sleep.
             
             int sleepTimeRemainder = timeUntilNewReading - (round(timeUntilNewReading/60)*60);
             if (sleepTimeRemainder){
-                wakeupTime = currentTime + sleepTimeRemainder;
                 Sleep(sleepTimeRemainder);
             }
             else{
-                wakeupTime = currentTime + 60;
                 Sleep(60);
             }
         }
         else{
-            wakeupTime = currentTime + timeUntilNewReading+4;
             Sleep(timeUntilNewReading+4);
         }
     } //TODO: add 2 to sleep time if its missing readings.
@@ -200,8 +183,13 @@ void OnStart(Config config) {
         Serial.print(" , password: ");
         Serial.println(wifiPassword);
     #endif
+    
+    Serial.println("Getting time from RTC.");
+    time(&rtcTime);
+    Serial.print("RTC time: ");
+    Serial.println(rtcTime);
 
-    if (UpdateBg() || prevGl.bg == 0.0 || wakeupTime == 0){
+    if (UpdateBg(rtcTime) || prevGl.bg == 0.0 || rtcTime == 0){
         if (ConnectToNetwork(wifiSsid, wifiPassword)){
             noWifiPrev = false;
             wifiTimoutPrev = false;
@@ -239,6 +227,7 @@ void OnStart(Config config) {
         }
     }
     else{
+        Serial.println("Updating Mins since reading.");
         UpdateDisplay(config);
     }
 }

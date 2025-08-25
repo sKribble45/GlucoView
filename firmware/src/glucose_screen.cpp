@@ -22,7 +22,7 @@ void ClearGlucoseBuffer(GlucoseReading gl, bool glucoseStrikethrough, String war
 }
 
 void DisplayGlucose(GlucoseReading gl, bool glucoseStrikethrough, String warning, bool updateNeeded, int wifiSignalStrength){
-    if (uiLastScreen != GLUCOSE || partialUpdates >= PARTIAL_UPDATE_LIMIT || (warning == "" && prevgs.warning != "")){
+    if (uiLastScreen != GLUCOSE || partialUpdates >= PARTIAL_UPDATE_LIMIT){
         // Write the glucose screen to buffer.
         UiFullClear();
         DrawGlucoseBuffer(gl, glucoseStrikethrough, warning, updateNeeded, wifiSignalStrength);
@@ -43,5 +43,10 @@ void DisplayGlucose(GlucoseReading gl, bool glucoseStrikethrough, String warning
         // Increment a counter so that it full refreshes every 10 partial.
         partialUpdates ++;
     }
-    prevgs = {gl, glucoseStrikethrough, warning, updateNeeded, wifiSignalStrength};
+
+    warning.toCharArray(prevgs.warning, sizeof(prevgs.warning));
+    prevgs.gl = gl;
+    prevgs.glucoseStrikethrough = glucoseStrikethrough;
+    prevgs.updateNeeded = updateNeeded;
+    prevgs.wifiSignalStrength = wifiSignalStrength;
 }

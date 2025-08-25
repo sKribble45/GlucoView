@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "config/config_manager.h"
 
 #ifndef __BG_DATASOURCE_H
@@ -15,7 +16,7 @@ typedef struct {
     double delta;
     int mgdl;
     int mgdlDelta;
-    String trend_description;
+    char trendDescription[14];
 
     bool failed;
 } GlucoseReading;
@@ -27,5 +28,6 @@ double MgdlToMmol(int mgdl);
 bool BgDataSourceInit(Config config);
 bool RetrieveGlDataSource();
 GlucoseReading GlDataSource();
+void PrintGlucose(GlucoseReading gl);
 
 #endif

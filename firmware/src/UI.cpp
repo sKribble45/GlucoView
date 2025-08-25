@@ -147,12 +147,16 @@ static GlucoseReadingString GetGLChar(GlucoseReading gl, Config config){
     }
     
     const unsigned char* arrow;
-    if (gl.trend_description == "SingleUp" || gl.trend_description == "DoubleUp") arrow = ArrowN_bits;
-    else if (gl.trend_description == "FortyFiveUp") arrow = ArrowNE_bits;
-    else if (gl.trend_description == "Flat") arrow = ArrowE_bits;
-    else if (gl.trend_description == "FortyFiveDown") arrow = ArrowSE_bits;
-    else if (gl.trend_description == "SingleDown" || gl.trend_description == "DoubleDown") arrow = ArrowS_bits;
-    else{arrow = ArrowE_bits;}
+    String trend = String(gl.trendDescription);
+    if (trend == "SingleUp" || trend == "DoubleUp") arrow = ArrowN_bits;
+    else if (trend == "FortyFiveUp") arrow = ArrowNE_bits;
+    else if (trend == "Flat") arrow = ArrowE_bits;
+    else if (trend == "FortyFiveDown") arrow = ArrowSE_bits;
+    else if (trend == "SingleDown" || trend == "DoubleDown") arrow = ArrowS_bits;
+    else{
+        arrow = ArrowE_bits;
+        Serial.println("Trent Description not recognised.");
+    }
     glchr.arrow = arrow;
     
     return glchr;
@@ -189,9 +193,9 @@ void UiClearGlucose(GlucoseReading gl){
     GlucoseReadingString glstr = GetGLChar(gl, UiConfig);
     bool arrowEnabled = GetBooleanValue("trend-arrow", UiConfig);
     int glucoseOffset = 0;
-    if (glstr.bg.length() == 3){
-        if (arrowEnabled){glucoseOffset = (EPD_2in13_V4_HEIGHT-((Font80.Width*3)+60))/2;}
-        else{glucoseOffset = (EPD_2in13_V4_HEIGHT-(Font80.Width*3))/2;}
+    if (glstr.bg.length() <= 3){
+        if (arrowEnabled){glucoseOffset = (EPD_2in13_V4_HEIGHT-((Font80.Width*glstr.bg.length())+60))/2;}
+        else{glucoseOffset = (EPD_2in13_V4_HEIGHT-(Font80.Width*glstr.bg.length()))/2;}
     }
     // Draw bg
     UiClearText(false, 0+glucoseOffset, (EPD_2in13_V4_WIDTH / 2) - (Font80.Height/2), glstr.bg.c_str(), &Font80);
@@ -207,7 +211,7 @@ void UiClearGlucose(GlucoseReading gl){
     if (arrowEnabled){
         int arrowXPos = (192-(Font80.Width * (glstr.bg.length()-4)*-1)) + glucoseOffset;
         int arrowYPos = 33;
-        Paint_ClearWindows(arrowXPos, arrowYPos, arrowXPos + 60, arrowYPos + 60, WHITE);
+        Paint_ClearWindows(arrowXPos, arrowYPos, arrowXPos + 60, arrowYPos - 60, WHITE);
     }
     uiLastScreen = GLUCOSE;
 }
