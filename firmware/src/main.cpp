@@ -162,10 +162,10 @@ void UpdateDisplay(Config config){
             
             int sleepTimeRemainder = timeUntilNewReading - (round(timeUntilNewReading/60)*60);
             if (sleepTimeRemainder){
-                Sleep(sleepTimeRemainder);
+                Sleep(sleepTimeRemainder + 4);
             }
             else{
-                Sleep(60);
+                Sleep(60 + 4);
             }
         }
         else{
