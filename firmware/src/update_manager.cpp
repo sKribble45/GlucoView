@@ -92,10 +92,10 @@ JsonObject GetLatestRelease(JsonDocument &json){
             break;
         }
     }
-    Version latestVesion = ParseStringVersion(json[0]["tag_name"]);
+    Version latestVesion = ParseStringVersion(latestRelease["tag_name"]);
     if (GetBooleanValue("beta", updateConfig)){
         for (JsonObject release : json.as<JsonArray>()){
-            Version releaseItteratorVersion = ParseStringVersion(release["tag_name"].as<const char*>());
+            Version releaseItteratorVersion = ParseStringVersion(release["tag_name"]);
             if (release["prerelease"].as<bool>() 
             && latestVesion.major <= releaseItteratorVersion.major 
             && latestVesion.minor <= releaseItteratorVersion.minor 
@@ -128,12 +128,23 @@ bool CheckForUpdate(){
     if (t - lastCheckedForUpdates > 30*60 || lastCheckedForUpdates == 0){
         Version latestVersion = GetVersion();
         if (latestVersion.major != 0){
+            updateNeeded = (
+                latestVersion.major > VERSION_MAJOR || 
+                
+                (latestVersion.minor > VERSION_MINOR && 
+                    latestVersion.major == VERSION_MAJOR) || 
+
+                (latestVersion.revision > VERSION_REVISION && 
+                    latestVersion.minor == VERSION_MINOR && 
+                    latestVersion.major == VERSION_MAJOR));
+            
             if (GetBooleanValue("beta", updateConfig)){
                 Serial.println(latestVersion.build);
-                updateNeeded = (latestVersion.major > VERSION_MAJOR || latestVersion.minor > VERSION_MINOR || latestVersion.revision > VERSION_REVISION || latestVersion.build > VERSION_BUILD);
-            }
-            else{
-                updateNeeded = (latestVersion.major > VERSION_MAJOR || latestVersion.minor > VERSION_MINOR || latestVersion.revision > VERSION_REVISION);
+                updateNeeded == updateNeeded || 
+                (latestVersion.build > VERSION_BUILD && 
+                    latestVersion.revision == VERSION_REVISION && 
+                    latestVersion.minor == VERSION_MINOR && 
+                    latestVersion.major == VERSION_MAJOR);
             }
             
             lastCheckedForUpdates = t;
