@@ -12,8 +12,6 @@ unsigned long GetEpoch(){
     }
     time_t epoch;
     time(&epoch);
-    Serial.print("Epoch: ");
-    Serial.println(epoch);
 
     return epoch;
 }

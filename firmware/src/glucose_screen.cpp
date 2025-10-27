@@ -1,10 +1,12 @@
 #include "UI.h"
 #include "glucose_screen.h"
 #include "glucose/bg_datasource.h"
+#include "wifi_manager.h"
 
 RTC_DATA_ATTR int partialUpdates = 0;
 const int PARTIAL_UPDATE_LIMIT = 50;
-RTC_DATA_ATTR GlucoseScreen prevgs;
+RTC_DATA_ATTR GlucoseScreen prevGs;
+RTC_DATA_ATTR GlucoseScreen Gs;
 
 void DrawGlucoseBuffer(GlucoseReading gl, bool glucoseStrikethrough, String warning, bool updateNeeded, int wifiSignalStrength){
     UiGlucose(gl);
@@ -21,7 +23,7 @@ void ClearGlucoseBuffer(GlucoseReading gl, bool glucoseStrikethrough, String war
     if (GetBooleanValue("wifi-icon", UiConfig)){UiClearWiFiIcon();}
 }
 
-void DisplayGlucose(GlucoseReading gl, bool glucoseStrikethrough, String warning, bool updateNeeded, int wifiSignalStrength){
+void DisplayGlScreen(GlucoseReading gl, bool glucoseStrikethrough, String warning, bool updateNeeded, int wifiSignalStrength){
     if (uiLastScreen != GLUCOSE || partialUpdates >= PARTIAL_UPDATE_LIMIT){
         // Write the glucose screen to buffer.
         UiFullClear();
@@ -31,11 +33,11 @@ void DisplayGlucose(GlucoseReading gl, bool glucoseStrikethrough, String warning
     }
     else{
         // write the previous screen to memory to tell the display it has already displayed it. (necccicary for partial update)
-        DrawGlucoseBuffer(prevgs.gl, prevgs.glucoseStrikethrough, prevgs.warning, prevgs.updateNeeded, prevgs.wifiSignalStrength);
+        DrawGlucoseBuffer(prevGs.gl, prevGs.glucoseStrikethrough, prevGs.warning, prevGs.updateNeeded, prevGs.wifiSignalStrength);
         UiWriteToMem();
 
         // Clear the area where the glucose text was displayed to be overwriten.
-        ClearGlucoseBuffer(prevgs.gl, prevgs.glucoseStrikethrough, prevgs.warning, prevgs.updateNeeded);
+        ClearGlucoseBuffer(prevGs.gl, prevGs.glucoseStrikethrough, prevGs.warning, prevGs.updateNeeded);
         // Write the glucose screen to buffer.
         DrawGlucoseBuffer(gl, glucoseStrikethrough, warning, updateNeeded, wifiSignalStrength);
         // Partial update the display, showing the image.
@@ -44,9 +46,29 @@ void DisplayGlucose(GlucoseReading gl, bool glucoseStrikethrough, String warning
         partialUpdates ++;
     }
 
-    warning.toCharArray(prevgs.warning, sizeof(prevgs.warning));
-    prevgs.gl = gl;
-    prevgs.glucoseStrikethrough = glucoseStrikethrough;
-    prevgs.updateNeeded = updateNeeded;
-    prevgs.wifiSignalStrength = wifiSignalStrength;
+    warning.toCharArray(prevGs.warning, sizeof(prevGs.warning));
+    prevGs.gl = gl;
+    prevGs.glucoseStrikethrough = glucoseStrikethrough;
+    prevGs.updateNeeded = updateNeeded;
+    prevGs.wifiSignalStrength = wifiSignalStrength;
+}
+
+void DisplayGlucose(GlucoseReading gl){
+    DisplayGlScreen(gl, false, "", Gs.updateNeeded, Gs.wifiSignalStrength);
+}
+
+
+void DisplayError(String warning, bool strikethrough){
+    DisplayGlScreen(prevGs.gl, strikethrough, warning, Gs.updateNeeded, Gs.wifiSignalStrength);
+}
+void DisplayError(String warning, bool strikethrough, GlucoseReading gl){
+    DisplayGlScreen(gl, strikethrough, warning, Gs.updateNeeded, Gs.wifiSignalStrength);
+}
+
+void UpdateGsSignalStrength(int signalStrength){
+    Gs.wifiSignalStrength = signalStrength;
+}
+
+void UpdateGsNeedUpdate(bool updateNeeded){
+    Gs.updateNeeded = updateNeeded;
 }

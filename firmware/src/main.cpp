@@ -19,14 +19,6 @@ using namespace std;
 esp_sleep_wakeup_cause_t wakeup_reason;
 RTC_DATA_ATTR GlucoseReading prevGl;
 
-RTC_DATA_ATTR bool noDataPrev = false;
-RTC_DATA_ATTR bool wifiTimoutPrev = false;
-RTC_DATA_ATTR bool noWifiPrev = false;
-RTC_DATA_ATTR int dexErrors = 0;
-RTC_DATA_ATTR bool displayUpdateNeeded = false;
-
-RTC_DATA_ATTR int wifiSignalStrength = 0;
-
 time_t rtcTime;
 
 // Sleep times.
@@ -34,17 +26,31 @@ const int NO_TIME_SLEEP = 5;
 const int NO_DATA_SLEEP = 5*60;
 const int RETRY_NO_DATA_SLEEP = 15;
 const int RETRY_TIMOUT_WIFI_SLEEP = 10;
-const int TIMOUT_WIFI_SLEEP = 30;
+const int WIFI_TIMEOUT_SLEEP = 30;
 const int NO_WIFI_SLEEP = 5*60;
 const int RETRY_NO_WIFI_SLEEP = 20;
 const int DS_ERROR_SLEEP = 20;
 
+const int SLEEP_TIME_DELAY = 4;
+
+enum State{
+    STATE_NORMAL,
+    STATE_NO_DATA,
+    STATE_NO_DATA_RETRY,
+    STATE_NO_WIFI,
+    STATE_WIFI_TIMEOUT,
+    STATE_INCORRECT_WIFI,
+    STATE_DS_ERROR
+};
+
+RTC_DATA_ATTR enum State state = STATE_NORMAL;
+
 void NoData(unsigned long currentTime, Config config){
-    if (noDataPrev){
-        Serial.println("No Data!");
-        DisplayGlucose(prevGl, true, "No Data", displayUpdateNeeded, wifiSignalStrength);
-        if (!
-            GetBooleanValue("rel-timestamp", config)){
+    if (state == STATE_NO_DATA_RETRY || state == STATE_NO_DATA){
+        state = STATE_NO_DATA;
+        Serial.println("No Data");
+        DisplayError("No Data", true);
+        if (!GetBooleanValue("rel-timestamp", config)){
             Sleep(NO_DATA_SLEEP);
         }
         else{
@@ -52,126 +58,126 @@ void NoData(unsigned long currentTime, Config config){
         }
     }
     else{
-        noDataPrev = true;
-        Serial.print("No new reading yet.");
-        DisplayGlucose(prevGl, true, "No Data", displayUpdateNeeded, wifiSignalStrength);
+        state = STATE_NO_DATA_RETRY;
+        Serial.println("No new reading yet.");
         Sleep(RETRY_NO_DATA_SLEEP);
     }
-    
 }
 
-GlucoseReading GetBG(Config config){
-    GlucoseReading gl;
-
-    bool sucess = false;
-    for (int i = 0; i < 2; i++){
-        if (BgDataSourceInit(config)){
-            sucess = true;
-            break;
-        }
-    }
-    if (!sucess){
-        Serial.println("Bg Data source init error");
-        DisplayGlucose(prevGl, true, "DS Error", updateNeeded, wifiSignalStrength);
-        Sleep(DS_ERROR_SLEEP);
-    }
-    
-    // Try twice at getting the reading until giving up and sleeping for a couple seconds.
-    sucess = false;
-    for (int i = 0; i < 2; i++){
-        if (RetrieveGlDataSource()){
-            gl = GlDataSource();
-            sucess = true;
-            break;
-        }
-    }
-    if (!sucess){
-        // DS stands for data source.
-        Serial.println("Bg Data source get error");
-        DisplayGlucose(prevGl, true, "DS Error", updateNeeded, wifiSignalStrength);
-        Sleep(DS_ERROR_SLEEP);
-    }
-    
-    return gl;
-}
-
-bool UpdateBg(unsigned long rtcTime){
+bool ShouldUpdateBg(unsigned long rtcTime){
     bool updateBg;
-    int minsSinceLastReading = round((double)((rtcTime - prevGl.timestamp)/60));
+    double minsSinceLastReading = round((rtcTime - prevGl.timestamp)/60);
     updateBg = (
-        (rtcTime - prevGl.timestamp > 5*60 -2) && !noDataPrev) || 
-        (((double)minsSinceLastReading/5 == floor((double)minsSinceLastReading/5)) && noDataPrev
+        // If it is 5m after the last reading.
+        (state == STATE_NORMAL && (rtcTime - prevGl.timestamp > 5*60 - SLEEP_TIME_DELAY)) || 
+        // Check if its a multiple of 5 if the state is No Data.
+        (state == STATE_NO_DATA && minsSinceLastReading/5 == floor(minsSinceLastReading/5)) ||
+        (state == STATE_NO_DATA_RETRY)
     );
     return updateBg;
 }
 
-void UpdateDisplay(Config config){
+void RelTimestampSleep(int timeUntilNewReading){
+    // Work out how long to sleep.
+    int sleepTimeRemainder = timeUntilNewReading - (round(timeUntilNewReading/60)*60);
+    if (sleepTimeRemainder == timeUntilNewReading){
+        Sleep(sleepTimeRemainder + SLEEP_TIME_DELAY);
+    }
+    if (sleepTimeRemainder > 0){
+        Sleep(sleepTimeRemainder);
+    }
+    else{
+        Sleep(60);
+    }
+}
+
+void UpdateDisplayGlucose(Config config){
     // Get the current epoch time.
     unsigned long currentTime = rtcTime;
 
     // Get the blood glucose reading from dexcom.
     GlucoseReading gl = prevGl;
-    if (UpdateBg(currentTime) || prevGl.bg == 0.0 || rtcTime <= 10){
-        currentTime = GetEpoch();
-        if (currentTime == 0){
-            if (rtcTime > 0){
-                Serial.println("Timeclient not updating, using old timestamp + the time it slept (less accurate)");
-                // calculate the previous wakeup time + the time it slept 
-                // This is less accurate because it could be doing things in between that take a few seconds
-                currentTime = rtcTime;
-            }
-            else{
-                Serial.println("No previous time data.");
-                Sleep(NO_TIME_SLEEP);
-            }
+    currentTime = GetEpoch();
+    Serial.print("Epoch: ");
+    Serial.println(currentTime);
+    // Check if ntp time worked
+    if (currentTime == 0){
+        // If the ntp time dosnt work use inbuilt rtc if it has been set
+        if (rtcTime > 10){
+            Serial.println("Timeclient not updating, using built in rtc time.");
+            currentTime = rtcTime;
         }
-
-        gl = GetBG(config);
-        gl.minsSinceReading = round((currentTime - gl.timestamp) / 60);
+        else{
+            // Reset as the rtc has not been set to the time via wifi.
+            Serial.println("No previous time data.");
+            Sleep(NO_TIME_SLEEP);
+        }
+    }
+    if (GetGl()){
+        gl = GlNow();
     }
     else{
-        gl.minsSinceReading = round((rtcTime - gl.timestamp) / 60);
+        Serial.println("DS Error");
+        DisplayError("DS Error", true);
+        Sleep(DS_ERROR_SLEEP);
     }
+    
+    PrintGlucose(gl);
     prevGl = gl;
     
-
+    // Update checking
+    bool updateNeeded = CheckForUpdate();
     if (GetBooleanValue("update-check", config)){
-        displayUpdateNeeded = CheckForUpdate();
-        if (GetBooleanValue("auto-update", config) && displayUpdateNeeded){
-            OtaUpdate();
-        }
+        UpdateGsNeedUpdate(updateNeeded);
+    }
+    if (GetBooleanValue("auto-update", config) && updateNeeded){
+        OtaUpdate();
     }
 
-    // no longer need wifi so turn it off to save some power.
+    // No longer need wifi so turn it off to save some power.
     WiFi.disconnect(true);
     WiFi.mode(WIFI_OFF);
-    
+
     // SLEEP!
+    
     int timeUntilNewReading = (5 * 60) - (currentTime - gl.timestamp);
 
     // sleep for the next reading.
-    
-    if(timeUntilNewReading < 0){NoData(currentTime, config);}
-    else {
-
+    if(timeUntilNewReading < 0){
+        gl.minsSinceReading = round((currentTime - gl.timestamp) / 60);
         PrintGlucose(gl);
-        DisplayGlucose(gl, false, "", displayUpdateNeeded, wifiSignalStrength);
+        DisplayGlucose(gl);
+
+        NoData(currentTime, config);
+    }
+    else {
+        PrintGlucose(gl);
+        DisplayGlucose(gl);
         
+        state = STATE_NORMAL;
         if (GetBooleanValue("rel-timestamp", config)){
-            // Work out how long to sleep.
-            
-            int sleepTimeRemainder = timeUntilNewReading - (round(timeUntilNewReading/60)*60);
-            if (sleepTimeRemainder){
-                Sleep(sleepTimeRemainder + 4);
-            }
-            else{
-                Sleep(60 + 4);
-            }
+            RelTimestampSleep(timeUntilNewReading);
         }
         else{
-            Sleep(timeUntilNewReading+4);
+            Sleep(timeUntilNewReading + SLEEP_TIME_DELAY);
         }
-    } //TODO: add 2 to sleep time if its missing readings.
+    }
+}
+
+void UpdateDisplay(){
+    prevGl.minsSinceReading = round((rtcTime - prevGl.timestamp) / 60);
+    
+    PrintGlucose(prevGl);
+    if (state == STATE_NO_DATA){
+        DisplayError("No Data", true, prevGl);
+    }
+    else{
+        DisplayGlucose(prevGl);
+    }
+    
+    int timeUntilNewReading = (5 * 60) - (rtcTime - prevGl.timestamp);
+
+    RelTimestampSleep(timeUntilNewReading);
 }
 
 void OnStart(Config config) {
@@ -184,51 +190,52 @@ void OnStart(Config config) {
         Serial.println(wifiPassword);
     #endif
     
-    Serial.println("Getting time from RTC.");
     time(&rtcTime);
     Serial.print("RTC time: ");
     Serial.println(rtcTime);
 
-    if (UpdateBg(rtcTime) || prevGl.bg == 0.0 || rtcTime == 0){
-        if (ConnectToNetwork(wifiSsid, wifiPassword)){
-            noWifiPrev = false;
-            wifiTimoutPrev = false;
-            wifiSignalStrength = GetSignalStrength();
-            UpdateDisplay(config);
+    if (ShouldUpdateBg(rtcTime) || prevGl.bg == 0.0 || rtcTime <= 10){
+        int networkConnectionCode = ConnectToNetwork(wifiSsid, wifiPassword);
+        if (networkConnectionCode == 0){
+            UpdateGsSignalStrength(GetWifiSignalStrength());
+            UpdateDisplayGlucose(config);
         }
         else{
-            wifiSignalStrength = 0;
-            WifiNetwork savedNetwork = {wifiSsid, wifiPassword};
-            bool savedNetworkExists = SavedNetworkExists(savedNetwork);
+            UpdateGsSignalStrength(0);
+            bool savedNetworkExists = SavedNetworkExists(wifiSsid);
             if (savedNetworkExists){
-                Serial.println("A saved wifi network exists :)");
-                if (wifiTimoutPrev){
-                    if (prevGl.bg != 0.0){DisplayGlucose(prevGl, true, "WiFi Timout", displayUpdateNeeded, wifiSignalStrength);}
-                    Sleep(TIMOUT_WIFI_SLEEP);
+                if (networkConnectionCode == 6){
+                    Serial.println("Failed to connect to wifi network (Incorrect Password) :(");
+                    if (state != STATE_INCORRECT_WIFI){
+                        state = STATE_INCORRECT_WIFI;
+                        Sleep(WIFI_TIMEOUT_SLEEP);
+                    }
+                    else{
+                        DisplayError("WiFi Fail", true);
+                        Sleep(NO_WIFI_SLEEP);
+                    }
                 }
                 else{
-                    if (prevGl.bg != 0.0){DisplayGlucose(prevGl, false, "", displayUpdateNeeded, wifiSignalStrength);}
+                    Serial.println("Failed to connect to wifi network (Timed out) :(");
+                    if (state != STATE_WIFI_TIMEOUT){
+                        state = STATE_WIFI_TIMEOUT;
+                    }
+                    Sleep(WIFI_TIMEOUT_SLEEP);
+                    
+                    //TODO: Handle Error
                 }
-                Serial.println("Failed to connect to wifi network (timed out) :(");
-                wifiTimoutPrev = true;
-                Sleep(RETRY_TIMOUT_WIFI_SLEEP);
             }
             else{
-                if (noWifiPrev){
-                    if (prevGl.bg != 0.0){DisplayGlucose(prevGl, true, "No WiFi", displayUpdateNeeded, wifiSignalStrength);}
-                    Sleep(NO_WIFI_SLEEP);
-                }
-                else{
-                    Serial.println("No saved wifi network exists :(");
-                    Sleep(RETRY_NO_WIFI_SLEEP);
-                }
-                noWifiPrev = true;
+                Serial.println("Failed to connect to wifi network (Not found) :(");
+                state = STATE_NO_WIFI;
+                Sleep(NO_WIFI_SLEEP);
+                //TODO: Handle Error
             }
         }
     }
     else{
         Serial.println("Updating Mins since reading.");
-        UpdateDisplay(config);
+        UpdateDisplay();
     }
 }
 
@@ -274,8 +281,9 @@ void setup(){
         PrintConfigValues(config);
     #endif
     // Load config to other components.
-    UiInitConfig(config);
-    UpdateInitConfig(config);
+    UpdateUiConfig(config);
+    UpdateUpdateManagerConfig(config);
+    UpdateDataSourceConfig(config);
 
     // Setup screen when you start the device for the first time.
     if (!SerialNumberExists() || !ConfigExists(config)){

@@ -8,6 +8,8 @@ GlucoseReading GetBgFromDexcom();
 extern String dexUsername;
 extern String dexPassword;
 extern bool dexOus;
-extern String dexSessionID;
+RTC_DATA_ATTR extern char sessionID[37];
+RTC_DATA_ATTR extern unsigned long lastSessionIdRenewal;
+
 
 #endif

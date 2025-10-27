@@ -23,7 +23,7 @@ RTC_DATA_ATTR time_t lastCheckedForUpdates = 0;
 Config updateConfig;
 
 // Initilise update configuration.
-void UpdateInitConfig(Config config){
+void UpdateUpdateManagerConfig(Config config){
     updateConfig = config;
 }
 
@@ -255,8 +255,8 @@ void UpdateMode(){
 
     Config config;
     LoadConfig(config);
-    UpdateInitConfig(config);
-    UiInitConfig(config);
+    UpdateUpdateManagerConfig(config);
+    UpdateUiConfig(config);
 
     String wifiSsid = GetStringValue("wifi-ssid", config);
     String wifiPassword = GetStringValue("wifi-password", config);

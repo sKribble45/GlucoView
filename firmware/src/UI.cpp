@@ -38,7 +38,7 @@ void DispInit(){
     Paint_Clear(WHITE);
 }
 // Initilise display configuration.
-void UiInitConfig(Config config){
+void UpdateUiConfig(Config config){
     UiConfig = config;
 }
 

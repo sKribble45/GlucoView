@@ -21,13 +21,14 @@ typedef struct {
     bool failed;
 } GlucoseReading;
 
-extern GlucoseReading gl;
+extern GlucoseReading dsGl;
+extern Config bgDSConfig;
 
 double MgdlToMmol(int mgdl);
-
-bool BgDataSourceInit(Config config);
-bool RetrieveGlDataSource();
-GlucoseReading GlDataSource();
+void UpdateDataSourceConfig(Config config);
+bool BgDataSourceInit();
+bool GetGl();
+GlucoseReading GlNow();
 void PrintGlucose(GlucoseReading gl);
 
 #endif

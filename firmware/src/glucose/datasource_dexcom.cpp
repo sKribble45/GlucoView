@@ -10,17 +10,20 @@ using namespace std;
 const char *DEXCOM_BASE_URL = "https://share2.dexcom.com/ShareWebServices/Services";
 const char *DEXCOM_BASE_URL_OUS = "https://shareous1.dexcom.com/ShareWebServices/Services";
 const char *DEXCOM_APPLICATION_ID = "d8665ade-9673-4e27-9ff6-92db4ce13d13";
-const char *DEXCOM_DEFAULT_SESSION_ID = "00000000-0000-0000-0000-000000000000";
+char DEXCOM_DEFAULT_SESSION_ID[37] = "00000000-0000-0000-0000-000000000000";
 
 // Dexcom credentials.
 String dexUsername;
 String dexPassword;
 bool dexOus;
-String dexSessionID = DEXCOM_DEFAULT_SESSION_ID;
 String dexServerUrl;
 
+RTC_DATA_ATTR char sessionID[37] = "00000000-0000-0000-0000-000000000000";
+RTC_DATA_ATTR unsigned long lastSessionIdRenewal = 0;
+const unsigned long sessionIDTimout = 2*60;
+
 // Get session id from dexcom (returns 00000000-0000-0000-0000-000000000000 if failed)
-String GetDexSessionId(String username, String password, String url){
+void UpdateDexSessionId(String username, String password, String url){
     // Make the json string containing the application id, username and password.
     String jsonString;
     jsonString += "{";
@@ -36,21 +39,34 @@ String GetDexSessionId(String username, String password, String url){
     int httpCode = http.POST(jsonString);
 
     if (httpCode == HTTP_CODE_OK){
-        return RemoveCharacterFromString(http.getString(), '\"');
+        char session[37];
+        RemoveCharacterFromString(http.getString(), '\"').toCharArray(session, 37, 0);
+        strcpy(sessionID, session);
     }
     else{
-        return DEXCOM_DEFAULT_SESSION_ID;
+        strcpy(sessionID, DEXCOM_DEFAULT_SESSION_ID);
     }
 }
 
 bool DexcomInit(String username, String password, bool ous){
+    Serial.println("Initilise dexcom");
+    Serial.print("Session ID: ");
+    Serial.println(sessionID);
     dexOus = ous;
     dexUsername = username;
     dexPassword = password;
     if (ous){dexServerUrl = DEXCOM_BASE_URL_OUS;}
     else{dexServerUrl = DEXCOM_BASE_URL;}
-    dexSessionID = GetDexSessionId(dexUsername, dexPassword, dexServerUrl);
-    if (dexSessionID == DEXCOM_DEFAULT_SESSION_ID){
+    time_t currentTime;
+    time(&currentTime);
+    // If its been longer than the timeout time since the last time the session id was generated.
+    if ((unsigned long)currentTime - lastSessionIdRenewal > sessionIDTimout || strcmp(sessionID, DEXCOM_DEFAULT_SESSION_ID) == 0){
+        Serial.print("Updating session ID, New session ID: ");
+        UpdateDexSessionId(dexUsername, dexPassword, dexServerUrl);
+        lastSessionIdRenewal = currentTime;
+        Serial.println(sessionID);
+    }
+    if (sessionID == DEXCOM_DEFAULT_SESSION_ID){
         return false;
     }
     else{
@@ -59,9 +75,12 @@ bool DexcomInit(String username, String password, bool ous){
 }
 
 GlucoseReading GetBgFromDexcom(){
+    Serial.print("Session ID: ");
+    Serial.println(sessionID);
+
     HTTPClient http;
     String url = dexServerUrl + "/Publisher/ReadPublisherLatestGlucoseValues?sessionId=";
-    url += dexSessionID;
+    url += sessionID;
     url += "&minutes=1440&maxCount=2";
     http.begin(url);
 
@@ -86,21 +105,15 @@ GlucoseReading GetBgFromDexcom(){
 
         gl.bg = MgdlToMmol(gl.mgdl);
         gl.delta = MgdlToMmol(gl.mgdlDelta);
-
         
         json[0]["Trend"].as<String>().toCharArray(gl.trendDescription, sizeof(gl.trendDescription));
-        Serial.print("Trend: ");
-        Serial.println(gl.trendDescription);
 
         string dtUnfiltered = json[0]["DT"].as<string>();
-        Serial.println(dtUnfiltered.c_str());
         // Cut out the numerical part from the "Date()" wrapper.
-        Serial.print("Timestamp: ");
         dtUnfiltered = dtUnfiltered.substr(5, dtUnfiltered.length()-2); // start at pos 5 ("Date(" <- here ) and create a string from there to before the last character (")").
         string timestampMilisStr = dtUnfiltered.substr(0, dtUnfiltered.length()-6);
         // Convert miliseconds to seconds for unix timestamp.
         gl.timestamp = stoi(timestampMilisStr.substr(0, timestampMilisStr.length()-3));
-        Serial.println(gl.timestamp);
 
         // Get the utc offset string formated hhmm (h: hour, m: min)
         string utcOffsetHrMinStr = dtUnfiltered.substr(dtUnfiltered.length()-5, dtUnfiltered.length());
@@ -110,8 +123,6 @@ GlucoseReading GetBgFromDexcom(){
         // Calculate utc offset.
         int utcOffset = (stoi(utcOffsetHrStr) * 60 * 60) + (stoi(utcOffsetMinStr) * 60);
         gl.tztimestamp = gl.timestamp + utcOffset;
-        Serial.print("Utc Offset: ");
-        Serial.println(utcOffset);
 
         gl.failed = false;
     }

@@ -34,7 +34,7 @@ void UiWifiQrCode(int startX, int startY, String ssid, String password);
 void UiUpdateMode();
 void UiSetupScreen();
 void UiSetupFinish();
-void UiInitConfig(Config config);
+void UpdateUiConfig(Config config);
 
 extern Config UiConfig;
 

@@ -5,9 +5,9 @@
 #include <Arduino.h>
 #include <unordered_map>
 using namespace std;
-const int WIFI_TIMEOUT = 15;
+const int WIFI_TIMEOUT = 10;
 
-bool SavedNetworkExists(WifiNetwork network){
+bool SavedNetworkExists(String ssid){
     WiFi.disconnect();
     // Scan for networks.
     Serial.println("Scanning for networks...");
@@ -27,9 +27,9 @@ bool SavedNetworkExists(WifiNetwork network){
 
 
         // if the ssid from one of the saved networks equals one of the scanned networks then 
-        if (network.ssid == scanned_network_ssid){
+        if (ssid == scanned_network_ssid){
             Serial.print("Found saved network: ");
-            Serial.println(network.ssid);
+            Serial.println(ssid);
             return true;
         }
         
@@ -37,8 +37,8 @@ bool SavedNetworkExists(WifiNetwork network){
     return false;
 }
 
-bool ConnectToNetwork(String ssid, String password){
-    // connect to the found wifi network.
+// Connects to a wifi network (returns 0 on sucess and the status on fail)
+int ConnectToNetwork(String ssid, String password){
     // set wifi mode to station.
     WiFi.mode(WIFI_STA); 
     // disconnect from any existing network. (shouldent be neccicary)
@@ -53,8 +53,13 @@ bool ConnectToNetwork(String ssid, String password){
     Serial.println(ssid);
 
     Serial.println("Status [6: DISCONNECTED, 5: CONNECTION_LOST, 4: CONNECT_FAILED, 3: WL_CONNECTED, 2: SCAN_COMPLETED, 1: NO_SSID_AVAIL, 0: IDLE]: ");
+    wl_status_t status;
     while (WiFi.status() != WL_CONNECTED && waitProgress <= (WIFI_TIMEOUT * 2)){
-        Serial.print(WiFi.status());
+        status = WiFi.status();
+        Serial.print(status);
+        if (status == 4 || status == 5){
+            break;
+        }
         delay(500);
         waitProgress ++;
     }
@@ -63,15 +68,16 @@ bool ConnectToNetwork(String ssid, String password){
     if (WiFi.status() == WL_CONNECTED){
         Serial.print("Success! connected to ");
         Serial.println(ssid);
-        return true;
+        return 0;
     }
     else{
-        Serial.println("Failed to conect to network. :(");
-        return false;
+        Serial.print("Failed to conect to network, wifi status: ");
+        Serial.println(status);
+        return status;
     }
 }
 
-int GetSignalStrength(){
+int GetWifiSignalStrength(){
     int8_t wifiRSSI = WiFi.RSSI();
     if (wifiRSSI < -80){return 0;}
     else if (wifiRSSI < -70) {return 1;}

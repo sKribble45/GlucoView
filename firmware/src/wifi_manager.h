@@ -7,16 +7,8 @@ using namespace std;
 #ifndef __WIFI_MANAGER_H
 #define __WIFI_MANAGER_H
 
-typedef struct {
-    String ssid;
-    String password;
-} WifiNetwork;
-
-
-
-WifiNetwork GetExistingSavedNetwork(list<WifiNetwork> saved_networks);
-bool SavedNetworkExists(WifiNetwork network);
-bool ConnectToNetwork(String ssid, String password);
-int GetSignalStrength();
+bool SavedNetworkExists(String ssid);
+int ConnectToNetwork(String ssid, String password);
+int GetWifiSignalStrength();
 
 #endif /* __WIFI_MANAGER_H */
