@@ -45,16 +45,34 @@ enum State{
 
 RTC_DATA_ATTR enum State state = STATE_NORMAL;
 
+void RelTimestampSleep(int timeUntilNewReading){
+    // Work out how long to sleep.
+    int sleepTimeRemainder = timeUntilNewReading - (round(timeUntilNewReading/60)*60);
+    if (sleepTimeRemainder == timeUntilNewReading){
+        Sleep(sleepTimeRemainder + SLEEP_TIME_DELAY);
+    }
+    
+    if (sleepTimeRemainder > 0){
+        Sleep(sleepTimeRemainder);
+    }
+    else{
+        Sleep(60);
+    }
+}
+
 void NoData(unsigned long currentTime, Config config){
     if (state == STATE_NO_DATA_RETRY || state == STATE_NO_DATA){
         state = STATE_NO_DATA;
         Serial.println("No Data");
         DisplayError("No Data", true);
+
+        int timeSniceLastReading = currentTime - prevGl.timestamp;
+        int timeUntilNextReadingCheck = (5*60) - timeSniceLastReading - floor((timeSniceLastReading/60)/5)*5*60;
         if (!GetBooleanValue("rel-timestamp", config)){
-            Sleep(NO_DATA_SLEEP);
+            Sleep(timeUntilNextReadingCheck + SLEEP_TIME_DELAY);
         }
         else{
-            Sleep(60);
+            RelTimestampSleep(timeUntilNextReadingCheck);
         }
     }
     else{
@@ -66,29 +84,15 @@ void NoData(unsigned long currentTime, Config config){
 
 bool ShouldUpdateBg(unsigned long rtcTime){
     bool updateBg;
-    double minsSinceLastReading = round((rtcTime - prevGl.timestamp)/60);
+    int minsSinceLastReading = round((rtcTime - prevGl.timestamp)/60);
     updateBg = (
         // If it is 5m after the last reading.
         (state == STATE_NORMAL && (rtcTime - prevGl.timestamp > 5*60 - SLEEP_TIME_DELAY)) || 
         // Check if its a multiple of 5 if the state is No Data.
-        (state == STATE_NO_DATA && minsSinceLastReading/5 == floor(minsSinceLastReading/5)) ||
+        (state == STATE_NO_DATA && minsSinceLastReading%5 == 0) ||
         (state == STATE_NO_DATA_RETRY)
     );
     return updateBg;
-}
-
-void RelTimestampSleep(int timeUntilNewReading){
-    // Work out how long to sleep.
-    int sleepTimeRemainder = timeUntilNewReading - (round(timeUntilNewReading/60)*60);
-    if (sleepTimeRemainder == timeUntilNewReading){
-        Sleep(sleepTimeRemainder + SLEEP_TIME_DELAY);
-    }
-    if (sleepTimeRemainder > 0){
-        Sleep(sleepTimeRemainder);
-    }
-    else{
-        Sleep(60);
-    }
 }
 
 void UpdateDisplayGlucose(Config config){
