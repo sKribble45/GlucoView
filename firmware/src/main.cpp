@@ -131,6 +131,8 @@ void UpdateDisplayGlucose(Config config){
     
     // Update checking
     bool updateNeeded = CheckForUpdate();
+    Serial.print("Update Needed: ");
+    Serial.println(updateNeeded);
     if (GetBooleanValue("update-check", config)){
         UpdateGsNeedUpdate(updateNeeded);
     }
@@ -149,7 +151,6 @@ void UpdateDisplayGlucose(Config config){
     // sleep for the next reading.
     if(timeUntilNewReading < 0){
         gl.minsSinceReading = round((currentTime - gl.timestamp) / 60);
-        PrintGlucose(gl);
         DisplayGlucose(gl);
 
         NoData(currentTime, config);
