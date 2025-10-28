@@ -500,16 +500,16 @@ String GetMainHtml(Config config){
     else{html.replace("\%NIGHTSCOUT%", "");}
     
     // Ui Options
-    html.replace("\%TREND_ARROW%",  GetStringValue("trend-arrow", config));
-    html.replace("\%DELTA%", GetStringValue("delta", config));
-    html.replace("\%12H_TIME%", GetStringValue("12h-time", config));
-    html.replace("\%TIMESTAMP%", GetStringValue("timestamp", config));
-    html.replace("\%REL_TIMESTAMP%", GetStringValue("rel-timestamp", config));
+    html.replace("\%TREND_ARROW%",  CheckboxValue(GetBooleanValue("trend-arrow", config)));
+    html.replace("\%DELTA%", CheckboxValue(GetBooleanValue("delta", config)));
+    html.replace("\%12H_TIME%", CheckboxValue(GetBooleanValue("12h-time", config)));
+    html.replace("\%TIMESTAMP%", CheckboxValue(GetBooleanValue("timestamp", config)));
+    html.replace("\%REL_TIMESTAMP%", CheckboxValue(GetBooleanValue("rel-timestamp", config)));
 
     // Update Options
-    html.replace("\%UPDATE_CHECK%", GetStringValue("update-check", config));
-    html.replace("\%AUTO_UPDATE%", GetStringValue("auto-update", config));
-    html.replace("\%BETA%", GetStringValue("beta", config));
+    html.replace("\%UPDATE_CHECK%", CheckboxValue(GetBooleanValue("update-check", config)));
+    html.replace("\%AUTO_UPDATE%", CheckboxValue(GetBooleanValue("auto-update", config)));
+    html.replace("\%BETA%", CheckboxValue(GetBooleanValue("beta", config)));
 
     return html;
 } 

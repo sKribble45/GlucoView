@@ -146,6 +146,9 @@ bool CheckForUpdate(){
                     latestVersion.minor == VERSION_MINOR && 
                     latestVersion.major == VERSION_MAJOR);
             }
+            else if (VERSION_BUILD != 0){
+                updateNeeded = true;
+            }
             
             lastCheckedForUpdates = t;
         }
